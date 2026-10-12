@@ -1,0 +1,251 @@
+﻿@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Google logo colors are fixed across both themes. */
+  --color-google-blue: #4285f4;
+  --color-google-green: #34a853;
+  --color-google-yellow: #fbbc05;
+  --color-google-red: #ea4335;
+  --color-main: var(--main);
+  --color-main-hover: var(--main-hover);
+  --color-main-active: var(--main-active);
+  --color-main-foreground: var(--main-foreground);
+  --color-main-soft: var(--main-soft);
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-outline: var(--outline);
+  --color-outline-strong: var(--outline-strong);
+  --color-focus: var(--focus);
+  --color-overlay: var(--overlay);
+  --color-disabled: var(--disabled);
+  --color-disabled-foreground: var(--disabled-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-brand-panel: var(--brand-panel);
+  --color-brand-panel-foreground: var(--brand-panel-foreground);
+  --color-brand-panel-muted: var(--brand-panel-muted);
+  --color-brand-highlight: var(--brand-highlight);
+  --color-brand-highlight-foreground: var(--brand-highlight-foreground);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-body), "Segoe UI", sans-serif;
+  --font-heading: var(--font-display), "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, monospace;
+  --text-display: clamp(3.25rem, 6vw, 5.5rem);
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.045em;
+  --text-page-title: clamp(2rem, 4vw, 2.75rem);
+  --text-page-title--line-height: 1.12;
+  --text-page-title--letter-spacing: -0.035em;
+  --shadow-soft: 0 8px 32px -16px var(--shadow-color);
+  --shadow-float: 0 24px 64px -24px var(--shadow-color);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Theme values: raw colors are confined to this stylesheet. */
+:root {
+  color-scheme: light;
+  --main: #2563b9;
+  --main-hover: #1e529d;
+  --main-active: #184382;
+  --main-foreground: #ffffff;
+  --main-soft: #e1efff;
+  --page: #f5f9ff;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-muted: #eaf1fb;
+  --ink: #172e4e;
+  --ink-muted: #4d6482;
+  --ink-subtle: #5e728e;
+  --outline: #d3e0f1;
+  --outline-strong: #788fae;
+  --focus: var(--main);
+  --overlay: #0c1c32;
+  --disabled: #e2eaf5;
+  --disabled-foreground: #5e728e;
+  --brand-panel: #dcecff;
+  --brand-panel-foreground: #163766;
+  --brand-panel-muted: #46617f;
+  --brand-highlight: #ffffff;
+  --brand-highlight-foreground: #163766;
+  --shadow-color: #173e7229;
+  --success: #147a5b;
+  --success-foreground: #ffffff;
+  --success-soft: #e8f6ef;
+  --warning: #a05d08;
+  --warning-foreground: #ffffff;
+  --warning-soft: #fff3d9;
+  --danger: #bc3e4b;
+  --danger-foreground: #ffffff;
+  --danger-soft: #fcecee;
+  --info: #236ca8;
+  --info-foreground: #ffffff;
+  --info-soft: #e7f1fd;
+  --radius: 0.875rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --main: #91c4ff;
+  --main-hover: #b5d8ff;
+  --main-active: #75b2f6;
+  --main-foreground: #102b4d;
+  --main-soft: #203a5d;
+  --page: #0d1728;
+  --surface: #15243b;
+  --surface-raised: #1e314d;
+  --surface-muted: #223550;
+  --ink: #edf4ff;
+  --ink-muted: #b0c1d9;
+  --ink-subtle: #9daec9;
+  --outline: #304662;
+  --outline-strong: #718bab;
+  --focus: var(--main);
+  --overlay: #040b15;
+  --disabled: #223550;
+  --disabled-foreground: #9daec9;
+  --brand-panel: #182f50;
+  --brand-panel-foreground: #eaf3ff;
+  --brand-panel-muted: #b0c6e1;
+  --brand-highlight: #accfff;
+  --brand-highlight-foreground: #102f54;
+  --shadow-color: #00000059;
+  --success: #78d9b0;
+  --success-foreground: #0c231a;
+  --success-soft: #142e26;
+  --warning: #f2c572;
+  --warning-foreground: #2c1c08;
+  --warning-soft: #332914;
+  --danger: #ff9aa5;
+  --danger-foreground: #33131a;
+  --danger-soft: #341d29;
+  --info: #8bcbff;
+  --info-foreground: #102337;
+  --info-soft: #152d43;
+}
+
+/* shadcn consumes the same semantic palette as custom Tailwind utilities. */
+:root,
+.dark {
+  --background: var(--page);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--ink);
+  --primary: var(--main);
+  --primary-foreground: var(--main-foreground);
+  --secondary: var(--surface-muted);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-muted);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--main-soft);
+  --accent-foreground: var(--main);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-foreground);
+  --border: var(--outline);
+  --input: var(--outline-strong);
+  --ring: var(--focus);
+  --chart-1: var(--main);
+  --chart-2: var(--success);
+  --chart-3: var(--info);
+  --chart-4: var(--warning);
+  --chart-5: var(--danger);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--main);
+  --sidebar-primary-foreground: var(--main-foreground);
+  --sidebar-accent: var(--main-soft);
+  --sidebar-accent-foreground: var(--main);
+  --sidebar-border: var(--outline);
+  --sidebar-ring: var(--focus);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+  }
+  body {
+    @apply bg-page text-ink;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1, h2, h3, h4 {
+    @apply font-heading;
+  }
+  a:focus-visible {
+    @apply rounded-sm outline-2 outline-offset-4 outline-focus;
+  }
+  ::selection {
+    @apply bg-main-soft text-main;
+  }
+}
+
+@utility page-shell {
+  @apply mx-auto w-full max-w-7xl px-6 sm:px-10 lg:px-16;
+}
+
+@utility eyebrow {
+  @apply text-xs font-semibold uppercase tracking-[0.16em];
+}
+
+@utility message-shape {
+  @apply rounded-3xl rounded-bl-sm;
+}
+
