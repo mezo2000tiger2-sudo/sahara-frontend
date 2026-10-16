@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
+import { decryptToken } from "@/utils/decrypt-token";
 
 const values = [
   { icon: MessageCircle, title: "A little more honesty.", description: "A thought, a thank-you, something you’ve always wanted to say." },
@@ -11,10 +12,12 @@ const values = [
   { icon: Sprout, title: "A little room to grow.", description: "A different perspective can help you see yourself in a new way." },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const signedIn = Boolean(await decryptToken());
+
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader showSignIn />
+      <SiteHeader showSignIn signedIn={signedIn} />
       <main id="main-content" className="flex-1">
         <section className="page-shell grid items-center gap-14 pt-10 pb-16 sm:pt-16 sm:pb-20 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pt-20 lg:pb-24" aria-labelledby="hero-title">
           <Reveal>
@@ -28,7 +31,7 @@ export default function Home() {
               Some things are easier to say with a little space. Saharah is a place for honest, anonymous messages — and the people behind them.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <Button asChild size="lg"><Link href="/signup">Create your account<ArrowUpRight aria-hidden="true" /></Link></Button>
+              {!signedIn ? <Button asChild size="lg"><Link href="/signup">Create your account<ArrowUpRight aria-hidden="true" /></Link></Button> : null}
               <Button asChild variant="ghost" size="lg"><a href="#the-idea">The idea<ArrowDown aria-hidden="true" /></a></Button>
             </div>
             <p className="mt-5 text-sm text-ink-subtle">Accounts are open. Messaging is on its way.</p>
@@ -72,10 +75,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <footer className="page-shell flex flex-wrap items-center justify-between gap-3 py-7 text-xs text-ink-subtle">
-        <p>Saharah · A little space for honest words.</p>
-        <p>Made for a more thoughtful connection.</p>
-      </footer>
+      
     </div>
   );
 }
