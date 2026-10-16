@@ -72,10 +72,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <footer className="page-shell flex flex-wrap items-center justify-between gap-3 py-7 text-xs text-ink-subtle">
-        <p>Saharah · A little space for honest words.</p>
-        <p>Made for a more thoughtful connection.</p>
-      </footer>
+      
     </div>
   );
 }
