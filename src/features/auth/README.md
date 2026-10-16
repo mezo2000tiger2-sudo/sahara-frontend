@@ -71,3 +71,12 @@ Server Action, or Route Handler. It reads and decrypts the Auth.js cookie,
 supports chunked HTTP/HTTPS cookies, and returns the backend token or `null`
 for missing, invalid, or expired sessions. Check for `null` before calling a
 protected backend endpoint. Never return the token to the browser or log it.
+
+## Profile actions
+
+Profile handlers use this token helper and clear the Auth.js cookie after
+confirmed backend logout. A successful password update also attempts current-token
+revocation before clearing the cookie. If that follow-up fails, the sign-in page
+preserves the backend error through `error=ProfileLogoutError&code=...` and separately
+states that the password was saved. No refresh-token or expiry behavior was changed.
+See [the profile guide](../profile/README.md) for the full integration and backend report.

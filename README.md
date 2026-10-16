@@ -18,10 +18,15 @@ database access.
 - Email signup forwards multipart form data with an optional avatar image.
 - Google authentication is available on both pages and creates a session directly.
 - A public release placeholder at `/`.
+- Authenticated profiles with separate edit/password pages, public sharing, and device logout.
 
 The custom pages are `/signup` and `/signin`. Signed-in visitors are redirected
 from these pages to `/`. Email accounts need manual activation in the database
 (`isConfirmed: true`) until the backend adds a confirmation endpoint.
+
+Profile pages are `/profile`, `/profile/edit`, `/profile/password`, and the public
+`/profile/[id]`. See [the profile integration guide](src/features/profile/README.md)
+for routes, schemas, fetching, deferred work, and known backend issues.
 
 ## Local setup
 

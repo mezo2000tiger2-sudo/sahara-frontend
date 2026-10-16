@@ -5,7 +5,7 @@ export type CredentialsErrorCode =
 
 export function authenticationErrorMessage(error?: string, code?: string) {
   if (!error) return undefined;
-  if (code !== undefined && (error === "GitHubBackendError" || error === "GoogleBackendError" || error === "CredentialsSignin")) {
+  if (code !== undefined && (error === "GitHubBackendError" || error === "GoogleBackendError" || error === "CredentialsSignin" || error === "ProfileLogoutError")) {
     return code;
   }
   if (error === "GitHubBackendError") {
