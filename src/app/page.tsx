@@ -4,7 +4,8 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
-import { decryptToken } from "@/utils/decrypt-token";
+import { readAuthToken } from "@/utils/decrypt-token";
+import { hasRefreshToken } from "@/lib/auth-api.server";
 
 const values = [
   { icon: MessageCircle, title: "A little more honesty.", description: "A thought, a thank-you, something you’ve always wanted to say." },
@@ -13,7 +14,7 @@ const values = [
 ];
 
 export default async function Home() {
-  const signedIn = Boolean(await decryptToken());
+  const signedIn = hasRefreshToken(await readAuthToken());
 
   return (
     <div className="flex min-h-dvh flex-col">

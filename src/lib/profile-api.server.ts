@@ -39,8 +39,8 @@ function parseResponse<T extends z.ZodType>(schema: T, payload: unknown): z.outp
 }
 
 export async function requireProfileToken() {
-  const token = await decryptToken();
-  if (!token) throw new ProfileApiError("authorization is required", 401);
+  const token = await decryptToken(true);
+  if (!token) throw new ProfileApiError("Your session expired. Please sign in again.", 401);
   return token;
 }
 
