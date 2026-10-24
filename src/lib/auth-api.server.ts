@@ -29,6 +29,7 @@ export async function refreshBackendToken(token: JWT): Promise<JWT | null> {
       redirect: "error",
       signal: AbortSignal.timeout(10_000),
     });
+    
     const payload: unknown = await response.json().catch(() => null);
     if (response.status === 401 || response.status === 404) return null;
     // The current backend reports JWT verification failures as HTTP 500.
@@ -46,43 +47,11 @@ export async function refreshBackendToken(token: JWT): Promise<JWT | null> {
   }
 }
 
-type BackendResponse = {
+export type BackendResponse = {
   user?: { name?: string; email: string };
   token?: { token_access: string; token_refresh: string };
   error?: string;
   message?: string;
 };
 
-export async function authenticateWithBackend(
-  path: "/user/signin" | "/user/signup/gmail" | "/user/signup/github",
-  body: Record<string, string>,
-) {
-  const response = await fetch(backendUrl(path), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-  const data = await response.json() as BackendResponse;
 
-  if (!response.ok) {
-    throw new Error(data.error ?? data.message ?? response.statusText);
-  }
-
-  const accessToken = data.token?.token_access;
-  const refreshToken = data.token?.token_refresh;
-  if (typeof accessToken !== "string" || !accessToken || typeof refreshToken !== "string" ||
-    !refreshToken || typeof data.user?.email !== "string") {
-    throw new Error("service_unavailable");
-  }
-
-  return {
-    id: data.user.email,
-    name: typeof data.user.name === "string" ? data.user.name : null,
-    email: data.user.email,
-    accessToken,
-    refreshToken,
-    accessTokenExpiresAt: tokenExpiresAt(accessToken),
-    refreshTokenExpiresAt: tokenExpiresAt(refreshToken),
-  };
-}

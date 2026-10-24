@@ -44,7 +44,7 @@ export function SignupForm() {
       if (response.status === 201 && result.success && !result.data.fieldErrors) {
         setRedirecting(true);
         setMessage({ text: result.data.message, type: "success" });
-        router.push("/signin");
+        router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
         return;
       }
       if (result.success) {

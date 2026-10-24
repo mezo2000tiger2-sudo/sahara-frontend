@@ -5,7 +5,8 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 
-import { authenticateWithBackend, refreshBackendToken } from "@/lib/auth-api.server";
+import { refreshBackendToken } from "@/lib/auth-api.server";
+import { authenticateWithBackend } from "./lib/authenticateWithBackend";
 import { signInSchema } from "@/schema/signinSchema";
 
 export const { handlers, auth, signIn, signOut, unstable_update: updateSession } = NextAuth({
