@@ -22,21 +22,53 @@ confirmation, and lets fetch generate the multipart boundary. It returns only
 arrays for field errors; the backend's full user document is never forwarded.
 
 Successful email signup saves the returned success message in
-`src/context/auth-message-context.tsx` and redirects to `/signin` without a session.
+`src/context/auth-message-context.tsx` and redirects to `/verify-email` with the
+signup email prefilled, without a session.
 The provider lives above the auth template, preserving messages between forms.
 Both forms and the social buttons use `useAuthMessage()` for shared banners;
 React Hook Form still owns inline validation and server field errors. Messages
 clear before email submission, when using the link between forms, or on refresh.
 Google callback messages keep their existing query parameters and mapping.
 No message cookies or storage are used.
-Accounts require manual `isConfirmed: true` database activation until a backend
-confirmation endpoint exists. The database's age maximum is 60, conflicting
+Email verification sends `{ email, otp }` through `POST /api/auth/confirm-email`
+to Express `POST /user/confrimEmail`. HTTP 200 `{ message: "done" }` confirms
+the account and redirects to sign-in. The database's age maximum is 60, conflicting
 with Joi; the frontend keeps the requested 18–120 validation range.
 
 `signUpFormSchema` additionally checks `cPassword`. Confirmation is not part of
 the backend contract and must not be sent to Express.
 
 `src/schema/signinSchema.ts` reuses the email/password field rules for signin.
+
+## Resend verification code
+
+On `/verify-email`, use **Resend code** if the signup email did not arrive or the
+code expired. Resending validates only the email, not the OTP. The browser sends
+`PATCH /api/auth/resend-otp` with `{ email }`; the server validates again and
+forwards only that field to `PATCH /user/resend-otp`. HTTP 200 with
+`{ message: "Done" }` is the only accepted success (capital D, unlike confirmation).
+The old OTP field clears after success and the user stays on verification.
+
+Signup and successful resend start a 120-second wait. Absolute deadlines are
+saved per email in `sessionStorage`, so refresh and switching emails preserve
+remaining time within the tab. Expired entries are removed. The backend remains
+responsible for expiry and abuse prevention; the displayed deadline is an estimate
+from the successful response, not a server-provided expiration timestamp.
+Storage failures do not interrupt authentication: resend timers continue in page
+memory, but refreshing loses them and the initial signup wait cannot be restored.
+
+Backend errors retain their original status and text. A positive integer string
+in backend `details` becomes numeric `retryAfterSeconds` in the frontend response
+and starts the corresponding countdown. Invalid, missing, negative, fractional,
+or overflowing retry metadata is ignored without hiding the error. Validation
+detail arrays are also accepted. No time is inferred from error-message text;
+backend cooldown or maximum-attempt errors without numeric details therefore
+display without an exact countdown. The backend must set `error.details`
+explicitly before throwing a block error.
+
+Verification remains available during a countdown. In-flight verification and
+resend requests share a lock, preventing double-clicks and overlapping requests.
+No resend request runs automatically on mount, refresh, or countdown expiry.
 
 Auth.js in `src/auth.ts` uses Credentials, Google, and GitHub with JWT sessions. All
 providers use `src/lib/auth-api.server.ts` to authenticate against Express.
