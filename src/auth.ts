@@ -5,10 +5,11 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 
-import { authenticateWithBackend } from "@/lib/auth-api.server";
+import { refreshBackendToken } from "@/lib/auth-api.server";
+import { authenticateWithBackend } from "./lib/authenticateWithBackend";
 import { signInSchema } from "@/schema/signinSchema";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut, unstable_update: updateSession } = NextAuth({
   pages: { signIn: "/signin", error: "/signin" },
   providers: [
     Credentials({
@@ -36,7 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google,
     GitHub,
   ],
-  session: { strategy: "jwt", maxAge: 5 * 60 },
+  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
   callbacks: {
     async signIn({ account, user }) {
       if (account?.provider === "github") {
@@ -67,9 +68,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return `/signin?error=GoogleBackendError&code=${encodeURIComponent(message)}`;
       }
     },
-    jwt({ token, user }) {
-      if (user) token.accessToken = user.accessToken;
-      return token;
+    async jwt({ token, user }) {
+      if (user) {
+        token.accessToken = user.accessToken;
+        token.refreshToken = user.refreshToken;
+        token.accessTokenExpiresAt = user.accessTokenExpiresAt;
+        token.refreshTokenExpiresAt = user.refreshTokenExpiresAt;
+      }
+      // Token values always come from Express, never from client session updates.
+      return refreshBackendToken(token);
+    },
+    session({ session, token }) {
+      session.error = token.error;
+      return session;
     },
   },
 });

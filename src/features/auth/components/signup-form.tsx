@@ -42,9 +42,14 @@ export function SignupForm() {
       const response = await fetch("/api/auth/signup", { method: "POST", body });
       const result = signupResponseSchema.safeParse(await response.json().catch(() => null));
       if (response.status === 201 && result.success && !result.data.fieldErrors) {
+        try {
+          sessionStorage.setItem(`auth:resend-otp:${values.email}`, String(Date.now() + 120_000));
+        } catch {
+          // Storage restrictions must not interrupt successful signup.
+        }
         setRedirecting(true);
         setMessage({ text: result.data.message, type: "success" });
-        router.push("/signin");
+        router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
         return;
       }
       if (result.success) {
@@ -61,7 +66,7 @@ export function SignupForm() {
     }
   }
 
-  return <form noValidate onSubmit={handleSubmit(submit)} className="space-y-6" aria-busy={busy}>
+  return <form noValidate onSubmit={(event) => void handleSubmit(submit)(event)} className="space-y-6" aria-busy={busy}>
     <FormMessage />
     <GoogleButton disabled={busy} busy={googleBusy} onBusy={setGoogleBusy} onError={(text) => setMessage({ text, type: "error" })} />
     <GitHubButton disabled={busy} busy={githubBusy} onBusy={setGithubBusy} onError={(text) => setMessage({ text, type: "error" })} />

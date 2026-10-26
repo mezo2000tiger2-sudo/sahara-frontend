@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { signOut } from "next-auth/react";
 
 import { backendProfileError, ProfileApiError } from "@/features/profile/errors";
 import { passwordResultSchema, profileMessageSchema, profileResponseSchema } from "@/schema/profileSchema";
@@ -8,6 +9,9 @@ import type { UpdateProfileInput } from "@/schema/updateProfileSchema";
 async function profileRequest<T extends z.ZodType>(path: string, schema: T, options?: RequestInit): Promise<z.output<T>> {
   const response = await fetch(path, { ...options, cache: "no-store" });
   const payload: unknown = await response.json().catch(() => null);
+  if (response.status === 401) {
+    await signOut({ redirectTo: "/signin?error=SessionExpired" });
+  }
   if (!response.ok) throw backendProfileError(payload, response.status, response.statusText);
   const parsed = schema.safeParse(payload);
   if (!parsed.success) throw new ProfileApiError("Invalid response from the profile service.", 502);

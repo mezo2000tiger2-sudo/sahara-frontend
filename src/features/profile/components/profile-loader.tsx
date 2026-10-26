@@ -9,9 +9,14 @@ import { getProfile } from "@/lib/profile-api.server";
 import { decryptToken } from "@/utils/decrypt-token";
 
 export async function ProfileLoader({ children }: { children: ReactNode }) {
-  const token = await decryptToken();
-  if (!token) redirect("/signin");
   const queryClient = new QueryClient();
+  let token: string | null;
+  try {
+    token = await decryptToken();
+  } catch {
+    return <ProfileError message="Unable to renew your session. Please try again." status={503} />;
+  }
+  if (!token) redirect("/signin?error=SessionExpired");
   try {
     await queryClient.fetchQuery({
       ...profileQueryOptions,
