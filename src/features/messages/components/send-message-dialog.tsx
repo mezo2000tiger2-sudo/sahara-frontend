@@ -9,7 +9,7 @@ import { LoadingSpinner } from "@/components/loading-spinner";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { sendMessage } from "@/features/messages/api";
@@ -21,6 +21,7 @@ export function SendMessageDialog({ recevierId, signedIn }: { recevierId: string
   const [open, setOpen] = useState(false);
   const [success, setSuccess] = useState("");
   const locked = useRef(false);
+  const fileInput = useRef<HTMLInputElement | null>(null);
   const { register, control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<CreateMessageFormInput, unknown, CreateMessageInput>({
     resolver: zodResolver(createMessageSchema),
     defaultValues: { recevierId, content: "", attachments: [], identity: "anonymous" },
@@ -28,7 +29,23 @@ export function SendMessageDialog({ recevierId, signedIn }: { recevierId: string
   const mutation = useMutation({ mutationFn: sendMessage, retry: false });
   const busy = isSubmitting || mutation.isPending;
   // Zod's whole-form refinement has an empty path, so the resolver uses an empty key.
-  const formError = (errors as { ""?: { message?: string } })[""]?.message ?? errors.recevierId?.message;
+  const formError = (errors as { ""?: { message?: string } })[""]?.message;
+  const attachmentErrors = [
+    errors.attachments?.message,
+    errors.attachments?.root?.message,
+    ...Object.entries(errors.attachments ?? {}).flatMap(([key, error]) =>
+      /^\d+$/.test(key) && error && typeof error === "object" && "message" in error && typeof error.message === "string" ? [error.message] : [],
+    ),
+  ].filter((message): message is string => typeof message === "string");
+  const errorMessages = [...new Set([
+    formError, errors.root?.message, errors.content?.message, errors.recevierId?.message, errors.identity?.message,
+    ...attachmentErrors,
+    mutation.error?.message,
+    ...(mutation.error instanceof ProfileApiError ? mutation.error.details?.map((detail) => detail.message) ?? [] : []),
+  ].filter((message): message is string => typeof message === "string"))];
+  const errorId = `${id}-errors`;
+  const contentInvalid = Boolean(errors.content || formError);
+  const imagesInvalid = Boolean(errors.attachments || formError);
 
   async function submit(values: CreateMessageInput) {
     try {
@@ -56,38 +73,35 @@ export function SendMessageDialog({ recevierId, signedIn }: { recevierId: string
             event.preventDefault();
             if (locked.current) return;
             locked.current = true;
+            mutation.reset();
             void handleSubmit(submit)(event).finally(() => { locked.current = false; });
           }}>
-          {success ? <Alert role="status" className="border-success/30 bg-success-soft text-success">{success}</Alert> : null}
-          {mutation.error ? <Alert variant="destructive" className="wrap-anywhere">
-            <p>{mutation.error.message}</p>
-            {mutation.error instanceof ProfileApiError && mutation.error.details?.length ? <ul className="list-disc space-y-1 pl-5">
-              {mutation.error.details.map((detail, index) => <li key={index}>{detail.message}</li>)}
-            </ul> : null}
+          {success ? <Alert role="status" className="border-success/30 bg-success-soft! text-success!">{success}</Alert> : null}
+          {errorMessages.length ? <Alert id={errorId} variant="destructive" className="border-danger/40 bg-danger-soft! p-4! text-danger! wrap-anywhere">
+            <ul className="list-disc space-y-1 pl-5">
+              {errorMessages.map((message) => <li key={message}>{message}</li>)}
+            </ul>
           </Alert> : null}
-          {formError ? <FieldError id={`${id}-form-error`}>{formError}</FieldError> : null}
           <fieldset disabled={busy} className="min-w-0 space-y-5">
             <legend className="sr-only">Your message</legend>
-            <Field data-invalid={Boolean(errors.content || formError)}>
+            <Field data-invalid={contentInvalid}>
               <FieldLabel htmlFor={`${id}-content`}>Message</FieldLabel>
               <textarea {...register("content")} id={`${id}-content`} rows={4}
-                aria-invalid={Boolean(errors.content || formError)}
-                aria-describedby={errors.content ? `${id}-content-error` : formError ? `${id}-form-error` : undefined}
+                aria-invalid={contentInvalid}
+                aria-describedby={contentInvalid ? errorId : undefined}
                 className="min-h-28 w-full resize-y rounded-lg border border-input bg-surface px-3 py-2 text-base text-ink outline-none placeholder:text-ink-muted focus-visible:ring-3 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:bg-disabled" />
-              {errors.content ? <FieldError id={`${id}-content-error`}>{errors.content.message}</FieldError> : null}
             </Field>
             <Controller control={control} name="attachments" render={({ field }) => {
               const files = field.value ?? [];
-              const attachmentError = errors.attachments?.message ?? errors.attachments?.root?.message ??
-                Object.values(errors.attachments ?? {}).flatMap((error) =>
-                  error && typeof error === "object" && "message" in error && typeof error.message === "string" ? [error.message] : [],
-                )[0];
-              return <Field data-invalid={Boolean(attachmentError)}>
+              return <Field data-invalid={imagesInvalid}>
                 <FieldLabel htmlFor={`${id}-attachments`}>Images</FieldLabel>
-                <Input id={`${id}-attachments`} name={field.name} ref={field.ref} onBlur={field.onBlur}
-                  type="file" accept="image/png,image/jpeg" multiple
-                  aria-invalid={Boolean(attachmentError)}
-                  aria-describedby={`${id}-images-help${attachmentError ? ` ${id}-images-error` : ""}${formError ? ` ${id}-form-error` : ""}`}
+                <Button type="button" variant="outline" className="w-fit" aria-controls={`${id}-attachments`}
+                  aria-invalid={imagesInvalid} aria-describedby={`${id}-images-help${imagesInvalid ? ` ${errorId}` : ""}`}
+                  onClick={() => { if (!locked.current) fileInput.current?.click(); }}>Add images</Button>
+                <Input id={`${id}-attachments`} name={field.name} ref={(element) => { field.ref(element); fileInput.current = element; }} onBlur={field.onBlur}
+                  type="file" accept="image/png,image/jpeg" multiple className="sr-only"
+                  aria-invalid={imagesInvalid}
+                  aria-describedby={`${id}-images-help${imagesInvalid ? ` ${errorId}` : ""}`}
                   onChange={(event) => {
                     if (!locked.current) field.onChange([...files, ...Array.from(event.target.files ?? [])]);
                     event.target.value = "";
@@ -96,23 +110,24 @@ export function SendMessageDialog({ recevierId, signedIn }: { recevierId: string
                 {files.length ? <ul className="space-y-2">
                   {files.map((file, index) => <li key={index} className="flex min-w-0 items-center justify-between gap-3 text-sm">
                     <span className="min-w-0 wrap-anywhere">{file.name}</span>
-                    <Button type="button" variant="ghost" aria-label={`Remove ${file.name}`} onClick={() => {
+                    <Button type="button" variant="destructive" className="bg-danger! text-danger-foreground! hover:bg-danger/85! focus-visible:ring-danger/40" aria-label={`Remove ${file.name}`} onClick={() => {
                       if (!locked.current) field.onChange(files.filter((_, fileIndex) => fileIndex !== index));
                     }}>Remove</Button>
                   </li>)}
                 </ul> : null}
-                {attachmentError ? <FieldError id={`${id}-images-error`}>{attachmentError}</FieldError> : null}
               </Field>;
             }} />
             {signedIn ? <Controller control={control} name="identity" render={({ field }) => (
-              <Field>
+              <Field data-invalid={Boolean(errors.identity)}>
                 <span id={`${id}-identity-label`} className="text-sm font-medium">Send as</span>
                 <RadioGroup name={field.name} value={field.value} disabled={busy} aria-labelledby={`${id}-identity-label`}
+                  className="grid-cols-2" orientation="horizontal"
+                  aria-invalid={Boolean(errors.identity)} aria-describedby={errors.identity ? errorId : undefined}
                   onValueChange={(value) => { if (!locked.current) field.onChange(value); }}>
-                  <label className="flex min-h-11 items-center gap-3" htmlFor={`${id}-anonymous`}>
+                  <label className="flex min-h-11 items-center gap-3 rounded-lg border border-outline p-3 has-[[data-state=checked]]:border-main has-[[data-state=checked]]:bg-main-soft" htmlFor={`${id}-anonymous`}>
                     <RadioGroupItem id={`${id}-anonymous`} value="anonymous" ref={field.ref} onBlur={field.onBlur} />Anonymous
                   </label>
-                  <label className="flex min-h-11 items-center gap-3" htmlFor={`${id}-identified`}>
+                  <label className="flex min-h-11 items-center gap-3 rounded-lg border border-outline p-3 has-[[data-state=checked]]:border-main has-[[data-state=checked]]:bg-main-soft" htmlFor={`${id}-identified`}>
                     <RadioGroupItem id={`${id}-identified`} value="identified" />Show my identity
                   </label>
                 </RadioGroup>
