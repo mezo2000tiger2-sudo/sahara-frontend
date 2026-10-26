@@ -15,9 +15,9 @@ export const createMessageSchema = z.object({
 });
 
 export const backendCreateMessageResponseSchema = z.object({
-  message: z.object({
+  message: z.array(z.object({
     _id: z.string().regex(/^[a-f\d]{24}$/i),
-  }),
+  })).length(1),
 });
 
 export const createMessageResponseSchema = z.object({ message: z.string() });
