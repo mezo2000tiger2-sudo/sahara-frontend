@@ -13,6 +13,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { sendMessage } from "@/features/messages/api";
+import { ProfileApiError } from "@/features/profile/errors";
 import { createMessageSchema, type CreateMessageFormInput, type CreateMessageInput } from "@/schema/createMessageSchema";
 
 export function SendMessageDialog({ recevierId, signedIn }: { recevierId: string; signedIn: boolean }) {
@@ -30,7 +31,6 @@ export function SendMessageDialog({ recevierId, signedIn }: { recevierId: string
   const formError = (errors as { ""?: { message?: string } })[""]?.message ?? errors.recevierId?.message;
 
   async function submit(values: CreateMessageInput) {
-    setSuccess("");
     try {
       const result = await mutation.mutateAsync({ ...values, identity: signedIn ? values.identity : "anonymous" });
       reset({ recevierId, content: "", attachments: [], identity: "anonymous" });
@@ -52,13 +52,19 @@ export function SendMessageDialog({ recevierId, signedIn }: { recevierId: string
         <form noValidate aria-busy={busy} className="space-y-5"
           onChange={() => setSuccess("")}
           onSubmit={(event) => {
+            setSuccess("");
             event.preventDefault();
             if (locked.current) return;
             locked.current = true;
             void handleSubmit(submit)(event).finally(() => { locked.current = false; });
           }}>
           {success ? <Alert role="status" className="border-success/30 bg-success-soft text-success">{success}</Alert> : null}
-          {mutation.error ? <Alert variant="destructive" className="wrap-anywhere">{mutation.error.message}</Alert> : null}
+          {mutation.error ? <Alert variant="destructive" className="wrap-anywhere">
+            <p>{mutation.error.message}</p>
+            {mutation.error instanceof ProfileApiError && mutation.error.details?.length ? <ul className="list-disc space-y-1 pl-5">
+              {mutation.error.details.map((detail, index) => <li key={index}>{detail.message}</li>)}
+            </ul> : null}
+          </Alert> : null}
           {formError ? <FieldError id={`${id}-form-error`}>{formError}</FieldError> : null}
           <fieldset disabled={busy} className="min-w-0 space-y-5">
             <legend className="sr-only">Your message</legend>

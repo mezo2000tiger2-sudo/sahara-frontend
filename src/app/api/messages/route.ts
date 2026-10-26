@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { ProfileApiError } from "@/features/profile/errors";
 import { backendErrorSchema, backendUrl } from "@/lib/backend-api.server";
 import { backendCreateMessageResponseSchema, createMessageSchema } from "@/schema/createMessageSchema";
 import { decryptToken } from "@/utils/decrypt-token";
@@ -74,7 +75,10 @@ export async function POST(request: Request) {
       return Response.json({ message: "We could not confirm that your message was sent." }, { status: 502 });
     }
     return Response.json({ message: "Message sent." });
-  } catch {
+  } catch (error) {
+    if (error instanceof ProfileApiError) {
+      return Response.json({ message: error.message, details: error.details }, { status: error.status });
+    }
     return Response.json({ message: "We could not confirm that your message was sent. The service may be unavailable." }, { status: 503 });
   }
 }
