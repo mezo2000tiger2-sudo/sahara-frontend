@@ -68,7 +68,7 @@ export const { handlers, auth, signIn, signOut, unstable_update: updateSession }
         return `/signin?error=GoogleBackendError&code=${encodeURIComponent(message)}`;
       }
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
@@ -76,10 +76,11 @@ export const { handlers, auth, signIn, signOut, unstable_update: updateSession }
         token.refreshTokenExpiresAt = user.refreshTokenExpiresAt;
       }
       // Token values always come from Express, never from client session updates.
-      return refreshBackendToken(token);
+      return refreshBackendToken(token, trigger === "update");
     },
     session({ session, token }) {
       session.error = token.error;
+      session.refreshError = token.refreshError;
       return session;
     },
   },

@@ -1,30 +1,19 @@
-import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
-import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+"use client";
 
+import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { ProfileError } from "@/features/profile/components/profile-error";
 import { ProfileApiError } from "@/features/profile/errors";
 import { profileQueryOptions } from "@/features/profile/queries";
-import { getProfile } from "@/lib/profile-api.server";
-import { decryptToken } from "@/utils/decrypt-token";
 
-export async function ProfileLoader({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient();
-  let token: string | null;
-  try {
-    token = await decryptToken();
-  } catch {
-    return <ProfileError message="Unable to renew your session. Please try again." status={503} />;
-  }
-  if (!token) redirect("/signin?error=SessionExpired");
-  try {
-    await queryClient.fetchQuery({
-      ...profileQueryOptions,
-      queryFn: async () => (await getProfile(token)).user,
-    });
-  } catch (error) {
-    return <ProfileError message={error instanceof Error ? error.message : String(error)}
-      status={error instanceof ProfileApiError ? error.status : undefined} />;
-  }
-  return <HydrationBoundary state={dehydrate(queryClient)}>{children}</HydrationBoundary>;
+export function ProfileLoader({ children }: { children: ReactNode }) {
+  const profile = useQuery(profileQueryOptions);
+  if (profile.isPending) return <div role="status" className="flex items-center gap-3 py-8 text-sm text-ink-muted">
+    <LoadingSpinner />Loading profile...
+  </div>;
+  if (profile.error && !profile.data) return <ProfileError message={profile.error.message}
+    status={profile.error instanceof ProfileApiError ? profile.error.status : undefined}
+    onRetry={() => void profile.refetch()} />;
+  return children;
 }

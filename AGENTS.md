@@ -1,3 +1,7 @@
+# user Guidelines
+-dont make complex fixes always show the simplest 
+-when you make a solution or a cosde recommendation explain why you used this solution
+-use your write or explore tool for the user to review the code easily not a command code on read only or build-ask
 # Repository Guidelines
 
 ## Project Structure & Module Organization

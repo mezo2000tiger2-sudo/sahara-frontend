@@ -13,8 +13,9 @@ examples for these operations, so response envelopes follow the backend code.
 - `/profile/[id]`: public name, email, phone, age, and gender, as requested.
 
 The shared layout provides the header and page shell without an authentication
-guard. Each private page uses `ProfileLoader` to check the cookie and fetch its
-initial profile. The public page validates its ID and calls Express without a token.
+guard. Each private page uses the client `ProfileLoader` to fetch its initial
+profile through `/api/profile`, where the server checks the cookie. The public
+page validates its ID and calls Express without a token.
 Public profiles are excluded from search indexing through page metadata.
 
 ## Routes and services
@@ -35,9 +36,9 @@ configured frontend origin (`AUTH_URL`, or the request origin when unconfigured)
 
 `api.ts` contains browser fetch functions. `queries.ts` provides the private
 `["profile", "me"]` query with a 60-second stale time and no automatic retries.
-Each server render creates its own QueryClient, loads Express directly, and
-hydrates only the allowlisted profile into the existing browser provider. It
-never calls the application's own HTTP routes from a Server Component.
+Initial loads and subsequent requests share the browser QueryClient. A backend
+`jwt expired` response triggers one cookie renewal and one retry of the rejected
+request, with a loading screen during renewal. Other backend errors are preserved.
 
 Backend requests and browser API responses use `no-store`. Failed backend requests
 preserve their status and display `error ?? message` verbatim. Validation detail
