@@ -98,7 +98,11 @@ Expired or rejected refresh tokens require sign-in again. Profile API HTTP 401
 responses clear the local session and navigate to `/signin?error=SessionExpired`,
 discarding the client query cache. Temporary refresh failures preserve the cookie
 and show a retryable error. Old cookies without refresh-token fields require
-sign-in once. There is no browser refresh endpoint or automatic mutation replay.
+sign-in once. The browser checks the session every 30 seconds. If a protected
+profile request returns `jwt expired`, it calls `POST /api/auth/refresh` and retries
+the original request once. Renewal saves the cookie through Auth.js; tokens stay
+server-only. Concurrent browser retries share one renewal request. A full-screen
+loading indicator appears during renewal, and errors from the retry remain visible.
 
 Google or GitHub from either page creates a session and redirects directly to `/`.
 Credentials signin preserves the backend error message in the Auth.js result's

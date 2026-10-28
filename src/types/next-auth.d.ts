@@ -11,6 +11,7 @@ declare module "next-auth" {
 
   interface Session {
     error?: "RefreshUnavailable";
+    refreshError?: { message: string; status: number };
   }
 }
 
@@ -21,5 +22,6 @@ declare module "next-auth/jwt" {
     accessTokenExpiresAt?: number;
     refreshTokenExpiresAt?: number;
     error?: "RefreshUnavailable";
+    refreshError?: { message: string; status: number };
   }
 }

@@ -17,9 +17,9 @@ export function hasRefreshToken(token: JWT | null): token is JWT {
     token.accessTokenExpiresAt && token.refreshTokenExpiresAt && token.refreshTokenExpiresAt > Date.now());
 }
 
-export async function refreshBackendToken(token: JWT): Promise<JWT | null> {
+export async function refreshBackendToken(token: JWT, force = false): Promise<JWT | null> {
   if (!hasRefreshToken(token)) return null;
-  if (token.accessTokenExpiresAt! > Date.now() + 30_000) return { ...token, error: undefined };
+  if (!force && token.accessTokenExpiresAt! > Date.now() + 30_000) return { ...token, error: undefined, refreshError: undefined };
 
   try {
     const response = await fetch(backendUrl("/user/refresh-token"), {
@@ -30,20 +30,25 @@ export async function refreshBackendToken(token: JWT): Promise<JWT | null> {
       signal: AbortSignal.timeout(10_000),
     });
     
+    console.log(response)
     const payload: unknown = await response.json().catch(() => null);
+    console.log(payload)
     if (response.status === 401 || response.status === 404) return null;
     // The current backend reports JWT verification failures as HTTP 500.
-    const failure = z.object({ error: z.string() }).safeParse(payload);
+    const failure = z.object({ error: z.string().optional(), message: z.string().optional() }).safeParse(payload);
     if (response.status === 500 && failure.success &&
-      ["jwt expired", "invalid signature", "jwt malformed", "invalid token"].includes(failure.data.error)) return null;
-    if (!response.ok) return { ...token, error: "RefreshUnavailable" };
+      ["jwt expired", "invalid signature", "jwt malformed", "invalid token"].includes(failure.data.error ?? failure.data.message ?? "")) return null;
+    if (!response.ok) return { ...token, error: "RefreshUnavailable", refreshError: {
+      message: failure.success ? failure.data.error ?? failure.data.message ?? response.statusText : response.statusText,
+      status: response.status,
+    } };
 
     const accessToken = tokenResponseSchema.parse(payload).token.token_access;
     const accessTokenExpiresAt = tokenExpiresAt(accessToken);
-    if (accessTokenExpiresAt <= Date.now() + 30_000) return { ...token, error: "RefreshUnavailable" };
-    return { ...token, accessToken, accessTokenExpiresAt, error: undefined };
+    if (accessTokenExpiresAt <= Date.now() + 30_000) return { ...token, error: "RefreshUnavailable", refreshError: undefined };
+    return { ...token, accessToken, accessTokenExpiresAt, error: undefined, refreshError: undefined };
   } catch {
-    return { ...token, error: "RefreshUnavailable" };
+    return { ...token, error: "RefreshUnavailable", refreshError: undefined };
   }
 }
 

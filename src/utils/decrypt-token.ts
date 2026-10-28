@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getToken } from "next-auth/jwt";
 import { updateSession } from "@/auth";
 import { hasRefreshToken, refreshBackendToken } from "@/lib/auth-api.server";
+import { ProfileApiError } from "@/features/profile/errors";
 
 /** Read the backend access token from the encrypted Auth.js cookie. */
 export async function readAuthToken() {
@@ -27,6 +28,9 @@ export async function decryptToken(persist = false): Promise<string | null> {
       token = await refreshBackendToken(token);
     }
   }
-  if (token?.error === "RefreshUnavailable") throw new Error("Unable to renew your session. Please try again.");
+  if (token?.error === "RefreshUnavailable") throw new ProfileApiError(
+    token.refreshError?.message ?? "Unable to renew your session. Please try again.",
+    token.refreshError?.status ?? 503,
+  );
   return hasRefreshToken(token) ? token.accessToken! : null;
 }
