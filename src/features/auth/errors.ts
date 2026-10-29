@@ -6,7 +6,10 @@ export type CredentialsErrorCode =
 export function authenticationErrorMessage(error?: string, code?: string) {
   if (!error) return undefined;
   if (error === "SessionExpired") return "Your session expired. Please sign in again.";
-  if (code !== undefined && (error === "GitHubBackendError" || error === "GoogleBackendError" || error === "CredentialsSignin" || error === "ProfileLogoutError")) {
+  if (error === "CredentialsSignin" && (!code || code === "credentials")) {
+    return "The email or password is incorrect.";
+  }
+  if (code && (error === "GitHubBackendError" || error === "GoogleBackendError" || error === "CredentialsSignin" || error === "ProfileLogoutError")) {
     return code;
   }
   if (error === "GitHubBackendError") {
