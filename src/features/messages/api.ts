@@ -22,7 +22,7 @@ export async function sendMessage(values: CreateMessageInput) {
   return parsed.data;
 }
 
-async function messageRequest<T extends z.ZodType>(path: string, schema: T, queryClient: QueryClient, options?: RequestInit): Promise<z.output<T>> {
+export async function messageRequest<T extends z.ZodType>(path: string, schema: T, queryClient: QueryClient, options?: RequestInit): Promise<z.output<T>> {
   async function request() {
     try {
       return await fetch(path, { ...options, cache: "no-store" });

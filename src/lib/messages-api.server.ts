@@ -37,7 +37,7 @@ export async function readMessageInput<T extends z.ZodType>(request: Request, sc
   return parseMessageInput(schema, await request.json().catch(() => null));
 }
 
-async function messageRequest<T extends z.ZodType>(path: string, schema: T, body?: unknown, method = "GET"): Promise<{ payload: z.output<T>; status: number }> {
+export async function messageRequest<T extends z.ZodType>(path: string, schema: T, body?: unknown, method = "GET"): Promise<{ payload: z.output<T>; status: number }> {
   const token = await decryptToken(true);
   if (!token) throw new ProfileApiError("Your session expired. Please sign in again.", 401);
 

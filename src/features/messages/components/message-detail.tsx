@@ -20,7 +20,10 @@ function MessageContent({ messageId, userId }: { messageId: string; userId: stri
     retry: false,
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["identity-requests", userId] });
-      if (result.request.status === "accepted") await queryClient.invalidateQueries({ queryKey: ["messages", userId] });
+      if (result.request.status === "accepted") await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["messages", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["conversations", userId, "list"] }),
+      ]);
     },
   });
   if (query.isPending) return <p role="status" className="flex items-center gap-2 py-8 text-sm text-ink-muted"><LoadingSpinner />Loading message…</p>;
@@ -28,6 +31,7 @@ function MessageContent({ messageId, userId }: { messageId: string; userId: stri
   const message = query.data;
   if (!message) return null;
   const status = mutation.data?.request.status;
+  const conversationId = mutation.data?.conversationId ?? message.conversationId;
   return <article className="space-y-6 rounded-2xl border border-outline bg-surface p-5 sm:p-8" aria-busy={mutation.isPending}>
     <div className="flex flex-wrap items-center justify-between gap-3"><time dateTime={message.createdAt} className="text-sm text-ink-muted">{new Date(message.createdAt).toLocaleString()}</time><Button variant="outline" disabled={query.isFetching || mutation.isPending} onClick={() => void query.refetch()}>Refresh</Button></div>
     {query.error ? <MessageError error={query.error} /> : null}
@@ -36,7 +40,8 @@ function MessageContent({ messageId, userId }: { messageId: string; userId: stri
     {message.recevierId === userId ? <section aria-labelledby="identity-title" className="space-y-4 border-t border-outline pt-6">
       <h2 id="identity-title" className="font-heading text-lg font-semibold">Sender identity</h2>
       <p className="text-sm leading-6 text-ink-muted">Ask the sender to share their identity. They can choose to accept or reject your request.</p>
-      {!status ? <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>{mutation.isPending ? "Requesting…" : "Request sender identity"}</Button> : <Alert role="status" className="bg-surface-muted!">{status === "pending" ? "Identity request pending. The sender can accept or reject it." : status === "accepted" ? "Identity request accepted. A conversation was created. Chat is not available on this page yet." : "Identity request rejected. It cannot be sent again."}</Alert>}
+      {!status ? <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>{mutation.isPending ? "Requesting…" : "Request sender identity"}</Button> : <Alert role="status" className="bg-surface-muted!">{status === "pending" ? "Identity request pending. The sender can accept or reject it." : status === "accepted" ? "Identity request accepted. Your conversation is ready." : "Identity request rejected. It cannot be sent again."}</Alert>}
+      {conversationId ? <Link href={`/conversation/${conversationId}`} className="block text-sm font-medium text-main underline-offset-4 hover:underline">Open conversation</Link> : null}
       {mutation.error ? <MessageError error={mutation.error} /> : null}
       <Link href="/message?view=requests&direction=sent" className="block text-sm font-medium text-main underline-offset-4 hover:underline">View sent identity requests</Link>
     </section> : null}
