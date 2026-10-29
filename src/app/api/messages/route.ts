@@ -4,6 +4,7 @@ import { ProfileApiError } from "@/features/profile/errors";
 import { backendErrorSchema, backendUrl } from "@/lib/backend-api.server";
 import { backendCreateMessageResponseSchema, createMessageSchema } from "@/schema/createMessageSchema";
 import { decryptToken } from "@/utils/decrypt-token";
+import { getMessages, messageErrorResponse, messageJson, readMessageListInput } from "@/lib/messages-api.server";
 
 export const runtime = "nodejs";
 
@@ -12,17 +13,25 @@ const messageErrorSchema = backendErrorSchema.omit({ details: true }).extend({
   details: z.unknown().optional(),
 });
 
+export async function GET(request: Request) {
+  try {
+    return messageJson(await getMessages(readMessageListInput(request)));
+  } catch (error) {
+    return messageErrorResponse(error);
+  }
+}
+
 export async function POST(request: Request) {
   const applicationOrigin = new URL(process.env.AUTH_URL ?? request.url).origin;
   if (request.headers.get("origin") !== applicationOrigin) {
-    return Response.json({ message: "Unable to submit this request." }, { status: 403 });
+    return messageJson({ message: "Unable to submit this request." }, { status: 403 });
   }
 
   let formData: FormData;
   try {
     formData = await request.formData();
   } catch {
-    return Response.json({ message: "Unable to read the message upload." }, { status: 400 });
+    return messageJson({ message: "Unable to read the message upload." }, { status: 400 });
   }
 
   const parsed = createMessageSchema.safeParse({
@@ -34,7 +43,7 @@ export async function POST(request: Request) {
     ),
   });
   if (!parsed.success) {
-    return Response.json({
+    return messageJson({
       message: parsed.error.issues[0].message,
       details: parsed.error.issues.map((issue) => ({ path: String(issue.path[0] ?? ""), message: issue.message })),
     }, { status: 400 });
@@ -45,7 +54,7 @@ export async function POST(request: Request) {
     if (parsed.data.identity === "identified") {
       const token = await decryptToken(true);
       if (!token) {
-        return Response.json({ message: "Your session expired. Please sign in again." }, { status: 401 });
+        return messageJson({ message: "Your session expired. Please sign in again." }, { status: 401 });
       }
       headers.set("Authorization", `Bearer ${token}`);
     }
@@ -66,19 +75,19 @@ export async function POST(request: Request) {
     const payload: unknown = await response.json().catch(() => null);
     if (!response.ok) {
       const error = messageErrorSchema.safeParse(payload);
-      return Response.json({
+      return messageJson({
         message: error.success ? error.data.error ?? error.data.message ?? response.statusText : response.statusText,
         details: error.success ? error.data.details : undefined,
       }, { status: response.status });
     }
     if (response.status !== 200 || !backendCreateMessageResponseSchema.safeParse(payload).success) {
-      return Response.json({ message: "We could not confirm that your message was sent." }, { status: 502 });
+      return messageJson({ message: "We could not confirm that your message was sent." }, { status: 502 });
     }
-    return Response.json({ message: "Message sent." });
+    return messageJson({ message: "Message sent." });
   } catch (error) {
     if (error instanceof ProfileApiError) {
-      return Response.json({ message: error.message, details: error.details }, { status: error.status });
+      return messageJson({ message: error.message, details: error.details }, { status: error.status });
     }
-    return Response.json({ message: "We could not confirm that your message was sent. The service may be unavailable." }, { status: 503 });
+    return messageJson({ message: "We could not confirm that your message was sent. The service may be unavailable." }, { status: 503 });
   }
 }
