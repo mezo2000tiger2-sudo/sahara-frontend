@@ -10,6 +10,7 @@ import type { z } from "zod";
 
 import { useAuthMessage } from "@/context/auth-message-context";
 import { signInSchema } from "@/schema/signinSchema";
+import { authenticationErrorMessage } from "@/features/auth/errors";
 import { AuthDivider, FormInput, FormMessage, GoogleButton, GitHubButton, SubmitButton } from "./form-controls";
 
 export function SigninForm({ initialError }: { initialError?: string }) {
@@ -31,7 +32,7 @@ export function SigninForm({ initialError }: { initialError?: string }) {
     try {
       const result = await signIn("credentials", { ...values, redirect: false, redirectTo: "/" });
       if (!result || result.error || !result.ok || !result.url) {
-        setMessage({ text: result?.code ?? result?.error ?? String(result?.status ?? 500), type: "error" });
+        setMessage({ text: authenticationErrorMessage(result?.error ?? "Unknown", result?.code)!, type: "error" });
         return;
       }
       setRedirecting(true);

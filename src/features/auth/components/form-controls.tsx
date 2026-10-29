@@ -44,7 +44,7 @@ export function FormMessage() {
   const { message } = useAuthMessage();
   if (!message) return null;
   const success = message.type === "success";
-  return <Alert role={success ? "status" : "alert"} className={success ? "border-success/30 bg-success-soft text-success" : "border-danger/30 bg-danger-soft text-danger"}>{message.text}</Alert>;
+  return <Alert role={success ? "status" : "alert"} className={`whitespace-pre-wrap break-words ${success ? "border-success/30 bg-success-soft text-success" : "border-danger/30 bg-danger-soft text-danger"}`}>{message.text}</Alert>;
 }
 
 export function SubmitButton({ pending, children }: { pending: boolean; children: React.ReactNode }) {

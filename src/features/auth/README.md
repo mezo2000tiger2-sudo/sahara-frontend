@@ -108,6 +108,12 @@ and GitHub backend errors use the existing query parameters, carrying the raw
 backend message in `code` and displaying it unchanged through the message context.
 
 Live Google OAuth requires configured credentials and a real account.
+Set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` for the built-in Google provider.
+
+Backend sign-in exchanges have a 10-second timeout and reject redirects.
+Transport failures, invalid responses, and malformed or expired tokens show a
+readable service-unavailable message. Backend error messages remain unchanged.
+Run `node --test scripts/signin.test.mjs` for the focused regression checks.
 
 GitHub uses `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` with the built-in
 `read:user user:email` scopes. Set the OAuth app callback URL to
