@@ -2,6 +2,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+body:has([data-conversation-screen]) footer {
+  display: none;
+}
+
 @theme inline {
   /* Google logo colors are fixed across both themes. */
   --color-google-blue: #4285f4;

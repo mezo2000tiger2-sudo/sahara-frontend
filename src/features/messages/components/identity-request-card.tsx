@@ -16,10 +16,14 @@ export function IdentityRequestCard({ request, userId, direction }: { request: I
     retry: false,
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["identity-requests", userId] });
-      if (result.request.status === "accepted") await queryClient.invalidateQueries({ queryKey: ["messages", userId] });
+      if (result.request.status === "accepted") await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["messages", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["conversations", userId, "list"] }),
+      ]);
     },
   });
   const status = mutation.data?.request.status ?? request.status;
+  const conversationId = mutation.data?.conversationId ?? request.conversationId;
   const requesterName = [request.requester?.fName, request.requester?.lName].filter(Boolean).join(" ");
   return <article className="space-y-4 rounded-2xl border border-outline bg-surface p-5 sm:p-6" aria-busy={mutation.isPending}>
     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -27,7 +31,7 @@ export function IdentityRequestCard({ request, userId, direction }: { request: I
       <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-medium capitalize">{status}</span>
     </div>
     <time dateTime={request.createdAt} className="block text-xs text-ink-muted">{new Date(request.createdAt).toLocaleString()}</time>
-    {status === "accepted" ? <Alert role="status" className="border-success/30 bg-success-soft! text-success!">Identity request accepted. A conversation was created. Chat is not available on this page yet.</Alert> : null}
+    {status === "accepted" ? <Alert role="status" className="border-success/30 bg-success-soft! text-success!">Identity request accepted. {conversationId ? <Link href={`/conversation/${conversationId}`} className="font-medium underline underline-offset-4">Open conversation</Link> : "Your conversation is unavailable."}</Alert> : null}
     {status === "rejected" ? <p role="status" className="text-sm text-ink-muted">This request was rejected. It cannot be sent again.</p> : null}
     {direction === "received" && status === "pending" ? <div className="space-y-3">
       <p className="text-sm leading-6 text-ink-muted">Accepting shares your identity with the recipient and creates a conversation.</p>
