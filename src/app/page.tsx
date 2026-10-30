@@ -1,11 +1,13 @@
-﻿import { ArrowDown, ArrowUpRight, Heart, MessageCircle, MessagesSquare, Sprout } from "lucide-react";
+﻿import { ArrowDown, ArrowUpRight, Heart, MessageCircle, Sprout } from "lucide-react";
 import Link from "next/link";
 
 import { SiteHeader } from "@/components/site-header";
 import { Reveal } from "@/components/reveal";
+import { HomeLetter } from "@/components/home-letter";
 import { Button } from "@/components/ui/button";
 import { readAuthToken } from "@/utils/decrypt-token";
 import { hasRefreshToken } from "@/lib/auth-api.server";
+import styles from "./home.module.css";
 
 const values = [
   { icon: MessageCircle, title: "A little more honesty.", description: "A thought, a thank-you, something you’ve always wanted to say." },
@@ -17,66 +19,58 @@ export default async function Home() {
   const signedIn = hasRefreshToken(await readAuthToken());
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className={styles.home}>
       <SiteHeader showSignIn signedIn={signedIn} />
-      <main id="main-content" className="flex-1">
-        <section className="page-shell grid items-center gap-14 pt-10 pb-16 sm:pt-16 sm:pb-20 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pt-20 lg:pb-24" aria-labelledby="hero-title">
+      <main id="main-content">
+        <section className={`page-shell ${styles.hero}`} aria-labelledby="hero-title">
           <Reveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-outline bg-surface px-3 py-2 text-xs font-medium text-ink-muted">
-              <span className="size-1.5 rounded-full bg-main" aria-hidden="true" />A new space. Coming soon.
-            </span>
-            <h1 id="hero-title" className="mt-7 font-heading text-display font-medium text-balance">
-              Small words.<br /><span className="text-main">Real meaning.</span>
-            </h1>
-            <p className="mt-6 max-w-md text-lg leading-8 text-ink-muted">
-              Some things are easier to say with a little space. Saharah is a place for honest, anonymous messages — and the people behind them.
-            </p>
-            <div className="mt-9 flex flex-wrap items-center gap-4">
-              {!signedIn ? <Button asChild size="lg"><Link href="/signup">Create your account<ArrowUpRight aria-hidden="true" /></Link></Button> : null}
-              <Button asChild variant="ghost" size="lg"><a href="#the-idea">The idea<ArrowDown aria-hidden="true" /></a></Button>
+            <p className={styles.eyebrow}><span aria-hidden="true" />A little space for honest words</p>
+            <h1 id="hero-title" className={styles.title}>Some words<br />deserve to<br />be <em>said.</em></h1>
+            <p className={styles.description}>A thank-you. A fresh perspective. Something you’ve always wanted to say. Give your words a home on Saharah.</p>
+            <div className={styles.actions}>
+              {!signedIn ? <Button asChild size="lg" className={styles.primary}><Link href="/signup">Create your account<ArrowUpRight aria-hidden="true" /></Link></Button> : null}
+              <Button asChild variant="ghost" size="lg" className={styles.secondary}><a href="#the-idea">The idea<ArrowDown aria-hidden="true" /></a></Button>
             </div>
-            <p className="mt-5 text-sm text-ink-subtle">Accounts are open. Messaging is on its way.</p>
+            <p className={styles.status}>Accounts are open. Messaging is on its way.</p>
           </Reveal>
 
-          <figure className="relative isolate m-0 rounded-3xl bg-main-soft px-6 pt-10 pb-7 sm:px-10 sm:pt-12 lg:pt-14">
-            <div className="mb-8 flex items-center justify-between text-main">
-              <span className="eyebrow">A little space for honest words</span>
-              <MessagesSquare className="ml-4 size-5 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-            </div>
-            <Reveal delay={0.12} className="message-shape relative z-10 mr-5 bg-surface p-6 shadow-soft sm:mr-10 sm:p-8">
-              <div className="mb-4 flex items-center gap-2 text-xs font-medium text-ink-muted"><MessageCircle className="size-4 shrink-0" aria-hidden="true" />Someone wanted you to know</div>
-              <p className="font-heading text-2xl leading-snug font-medium tracking-tight sm:text-3xl">“You make people feel like they belong. I hope you know that.”</p>
-              <span className="mt-5 block text-xs text-ink-subtle">A little appreciation</span>
-            </Reveal>
-            <Reveal delay={0.24} className="relative z-20 mt-5 ml-6 rounded-3xl rounded-br-sm bg-brand-panel p-6 text-brand-panel-foreground shadow-float sm:ml-14 sm:p-8">
-              <Heart className="mb-4 size-6 text-brand-highlight" strokeWidth={1.5} aria-hidden="true" />
-              <p className="font-heading text-2xl leading-snug font-medium tracking-tight">Sometimes, a few words<br />stay with you.</p>
-            </Reveal>
-            <figcaption className="mt-8 text-center text-xs text-ink-muted">An example of the kind of connection we’re building.</figcaption>
-          </figure>
+          <div className={styles.illustration}>
+            <figure className={styles.letterScene}>
+              <div className={styles.postmark} aria-hidden="true">A small note.<br />A lasting feeling.<span>↙</span></div>
+              <div className={styles.envelope}>
+                <div className={styles.envelopeBack} aria-hidden="true" />
+                <div className={styles.letterPocket}>
+                  <HomeLetter className={styles.letter}>
+                    <div className={styles.letterHeading}><MessageCircle size={16} aria-hidden="true" /><span>Someone wanted you to know</span></div>
+                    <blockquote>“You make people feel like they belong. I hope you know that.”</blockquote>
+                  </HomeLetter>
+                </div>
+                <div className={styles.envelopeFront} aria-hidden="true" />
+                <div className={styles.envelopeLabel} aria-hidden="true"><span>For you.</span><Heart size={22} strokeWidth={1.4} /></div>
+              </div>
+              <figcaption className={styles.caption}>Anonymous words. A very human connection.<span>An example of the kind of connection we’re building.</span></figcaption>
+            </figure>
+          </div>
         </section>
 
-        <section id="the-idea" aria-labelledby="idea-title" className="border-t border-outline bg-surface py-14 sm:py-16">
-          <div className="page-shell">
-            <div className="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <h2 id="idea-title" className="font-heading text-3xl font-medium tracking-tight">Good things start with a few words.</h2>
-              <p className="shrink-0 text-sm text-ink-muted">A simple idea. A human connection.</p>
-            </div>
-            <div className="grid gap-8 md:grid-cols-3 md:gap-10">
-              {values.map(({ icon: Icon, title, description }, index) => (
-                <Reveal key={title} delay={index * 0.08}>
-                <article className="border-t border-outline pt-6">
-                  <Icon className="mb-5 size-6 text-main" strokeWidth={1.5} aria-hidden="true" />
-                  <h3 className="font-heading text-xl font-medium tracking-tight">{title}</h3>
-                  <p className="mt-3 max-w-sm text-sm leading-7 text-ink-muted">{description}</p>
+        <section id="the-idea" aria-labelledby="idea-title" className={`page-shell ${styles.idea}`}>
+          <Reveal className={styles.ideaHeading}>
+            <p className={styles.eyebrow}>The idea behind Saharah</p>
+            <h2 id="idea-title">Small words.<br /><span>Real meaning.</span></h2>
+            <p>Some things are easier to say with a little space. A place for honest, anonymous messages — and the people behind them.</p>
+          </Reveal>
+          <div className={styles.values}>
+            {values.map(({ icon: Icon, title, description }, index) => (
+              <Reveal key={title} delay={index * 0.08}>
+                <article className={styles.value}>
+                  <span className={styles.valueIcon}><Icon size={22} strokeWidth={1.5} aria-hidden="true" /></span>
+                  <div><h3>{title}</h3><p>{description}</p></div>
                 </article>
-                </Reveal>
-              ))}
-            </div>
+              </Reveal>
+            ))}
           </div>
         </section>
       </main>
-      
     </div>
   );
 }

@@ -1,0 +1,192 @@
+.home {
+  --letter-paper: #ffffff;
+  --letter-ink: #172e4e;
+  --letter-muted: #4d6482;
+  --envelope: #c6d1f3;
+  --envelope-fold: #dce3fa;
+  --envelope-back: #a9bae9;
+  min-height: 100dvh;
+}
+
+.home > header { border-bottom: 1px solid var(--outline); }
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 3rem;
+  padding-top: 5rem;
+  padding-bottom: 6rem;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.eyebrow > span { width: 0.5rem; height: 0.5rem; background: var(--main); border-radius: 50%; }
+
+.title {
+  margin-top: 1.7rem;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(4rem, 6.7vw, 6.5rem);
+  font-weight: 500;
+  line-height: 0.99;
+  letter-spacing: -0.065em;
+}
+
+.title em {
+  position: relative;
+  color: var(--main);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.07em;
+}
+
+.title em::after {
+  content: "";
+  position: absolute;
+  right: -0.08em;
+  bottom: -0.06em;
+  left: 0;
+  height: 0.09em;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  transform: rotate(-5deg);
+}
+
+.description { max-width: 24rem; margin-top: 2rem; color: var(--ink-muted); font-size: 1rem; line-height: 1.85; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.8rem; }
+.primary { border-radius: 999px; padding-inline: 1.5rem; }
+.secondary { border-radius: 999px; }
+.status { margin-top: 1.1rem; color: var(--ink-subtle); font-size: 0.75rem; line-height: 1.6; }
+.illustration { min-width: 0; }
+.letterScene { position: relative; margin: 0; padding-top: 5rem; }
+
+.postmark {
+  position: absolute;
+  top: -0.5rem;
+  right: 0.5rem;
+  color: var(--ink-muted);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  line-height: 1.4;
+  transform: rotate(7deg);
+}
+
+.postmark span { display: block; margin-top: 0.2rem; font-size: 2.5rem; line-height: 1; }
+.envelope { position: relative; height: 26rem; isolation: isolate; }
+
+.letterPocket {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(-20% -20% 0 -20%);
+}
+
+.envelopeBack {
+  position: absolute;
+  inset: 5rem 0 0;
+  background: var(--envelope-back);
+  border-radius: 0.6rem;
+  transform: rotate(-5deg);
+}
+
+.letter {
+  position: absolute;
+  top: 0;
+  right: 1.8rem;
+  left: 1.8rem;
+  padding: 1.8rem 2rem 5rem;
+  border: 1px solid #172e4e12;
+  border-radius: 0.35rem;
+  background: var(--letter-paper);
+  color: var(--letter-ink);
+  box-shadow: 0 5px 24px #172e4e0d;
+  transform: rotate(3deg);
+}
+
+.letterHeading { display: flex; align-items: center; gap: 0.5rem; color: var(--letter-muted); font-size: 0.65rem; }
+.letterHeading svg { flex-shrink: 0; }
+.letter blockquote { margin: 1.5rem 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.4rem, 2.4vw, 2rem); line-height: 1.45; letter-spacing: -0.035em; }
+
+.envelopeFront {
+  position: absolute;
+  z-index: 1;
+  inset: 11rem 0 0;
+  border-radius: 0 0 0.6rem 0.6rem;
+  background: var(--envelope);
+  clip-path: polygon(0 0, 50% 40%, 100% 0, 100% 100%, 0 100%);
+  transform: rotate(-5deg);
+}
+
+.envelopeFront::after { content: ""; position: absolute; inset: 0; background: var(--envelope-fold); clip-path: polygon(50% 40%, 100% 100%, 0 100%); }
+
+.envelopeLabel {
+  position: absolute;
+  z-index: 2;
+  right: 2rem;
+  bottom: 2rem;
+  left: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--letter-ink);
+  transform: rotate(-5deg);
+}
+
+.envelopeLabel span { font-family: Georgia, "Times New Roman", serif; font-size: 2rem; font-style: italic; }
+.caption { margin-top: 2.5rem; text-align: center; color: var(--ink-muted); font-size: 0.8rem; }
+.caption span { display: block; margin-top: 0.5rem; color: var(--ink-subtle); font-size: 0.65rem; line-height: 1.6; }
+
+.idea {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  padding-block: 4rem 5rem;
+  border-top: 1px solid var(--outline);
+  scroll-margin-top: 2rem;
+}
+
+.ideaHeading h2 { margin-top: 1.4rem; font-size: clamp(2.5rem, 4vw, 3.7rem); font-weight: 500; line-height: 1.07; letter-spacing: -0.05em; }
+.ideaHeading h2 span { color: var(--ink-muted); }
+.ideaHeading > p:last-child { max-width: 23rem; margin-top: 1.5rem; color: var(--ink-muted); font-size: 0.9rem; line-height: 1.85; }
+.values { display: grid; gap: 1.8rem; }
+.value { display: flex; align-items: flex-start; gap: 1.2rem; }
+.valueIcon { display: grid; width: 2.8rem; height: 2.8rem; flex-shrink: 0; place-items: center; border: 1px solid var(--outline); border-radius: 50%; color: var(--main); }
+.value h3 { font-size: 1.15rem; font-weight: 500; letter-spacing: -0.025em; }
+.value p { max-width: 22rem; margin-top: 0.45rem; color: var(--ink-muted); font-size: 0.85rem; line-height: 1.8; }
+
+@media (max-width: 900px) {
+  .hero { gap: 1.5rem; padding-block: 3.5rem 4rem; }
+  .title { font-size: clamp(3.5rem, 7.5vw, 5rem); }
+  .letter { right: 0.7rem; left: 0.7rem; padding: 1.5rem 1.3rem 5rem; }
+  .letter blockquote { font-size: 1.5rem; }
+  .envelope { height: 25rem; }
+  .idea { gap: 3rem; }
+}
+
+@media (max-width: 640px) {
+  .home > header { position: relative; display: block; padding-block: 1rem; }
+  .home > header > nav { width: 100%; justify-content: flex-start; gap: 0; margin-top: 0.75rem; }
+  .home > header > nav > a { padding-inline: 0.65rem; font-size: 0.8rem; }
+  .home > header > nav:has(a[href="/signin"]) { margin-top: 0; }
+  .home > header > nav > [aria-label="Color theme"] { position: absolute; top: 0.65rem; right: 1.5rem; }
+  .hero { grid-template-columns: 1fr; gap: 3.5rem; padding-top: 2.8rem; }
+  .title { font-size: clamp(3.7rem, 14vw, 5.5rem); }
+  .description { max-width: 26rem; }
+  .letterScene { max-width: 27rem; margin-inline: auto; padding-top: 4rem; }
+  .postmark { top: -1rem; right: 0.8rem; font-size: 1rem; }
+  .letter { right: 1rem; left: 1rem; }
+  .letter blockquote { font-size: clamp(1.4rem, 5.7vw, 1.8rem); }
+  .envelope { height: 24rem; margin-inline: 0.5rem; }
+  .envelopeFront { top: 10rem; }
+  .caption { margin-top: 2rem; }
+  .idea { grid-template-columns: 1fr; gap: 2.5rem; padding-block: 3rem; }
+}
