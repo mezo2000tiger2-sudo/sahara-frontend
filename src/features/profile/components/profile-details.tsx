@@ -17,7 +17,7 @@ export function ProfileDetails({ profile, editable = false }: {
   ];
 
   return (
-    <section aria-labelledby="profile-details-title" className="min-w-0 rounded-2xl border border-outline bg-surface lg:col-span-2">
+    <section aria-labelledby="profile-details-title" className="min-w-0 overflow-hidden rounded-2xl border border-outline bg-surface lg:col-span-2">
       <div className="flex items-center gap-4 border-b border-outline bg-main-soft/30 p-5 sm:gap-5 sm:p-8">
         <ProfileAvatar profile={profile} />
         <div className="min-w-0">
