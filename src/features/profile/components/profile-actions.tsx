@@ -31,7 +31,7 @@ export function ProfileActions({ shareOrigin }: { shareOrigin?: string }) {
     },
   });
 
-  if (profileQuery.isError) return <ProfileError message={profileQuery.error.message}
+  if (profileQuery.isError && !profileQuery.data) return <ProfileError message={profileQuery.error.message}
     status={profileQuery.error instanceof ProfileApiError ? profileQuery.error.status : undefined}
     onRetry={() => { void profileQuery.refetch(); }} />;
   if (!profileQuery.data) return <p role="status" className="text-sm text-ink-muted">Loading profile…</p>;

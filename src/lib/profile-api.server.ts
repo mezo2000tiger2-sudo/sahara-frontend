@@ -7,6 +7,7 @@ import { backendProfileError, ProfileApiError } from "@/features/profile/errors"
 import { profileMessageSchema, profileResponseSchema, publicProfileResponseSchema } from "@/schema/profileSchema";
 import type { UpdatePasswordInput } from "@/schema/updatePasswordSchema";
 import type { UpdateProfileInput } from "@/schema/updateProfileSchema";
+import { updateProfileImageSchema } from "@/schema/updateProfileImageSchema";
 import { decryptToken } from "@/utils/decrypt-token";
 
 async function backendRequest(path: string, token?: string, body?: unknown, method = "GET") {
@@ -16,9 +17,9 @@ async function backendRequest(path: string, token?: string, body?: unknown, meth
       method,
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(body !== undefined && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
       cache: "no-store",
       redirect: "error",
       signal: AbortSignal.timeout(10_000),
@@ -64,6 +65,19 @@ export async function readProfileInput<T extends z.ZodType>(request: Request, sc
   return parsed.data;
 }
 
+export async function readProfileImageInput(request: Request) {
+  const form = await request.formData().catch(() => null);
+  if (!form) throw new ProfileApiError("Invalid image upload.", 400);
+  const entries = Array.from(form.entries());
+  if (entries.length !== 1) throw new ProfileApiError("Choose one avatar or cover image.", 400);
+  const [field, file] = entries[0];
+  const parsed = updateProfileImageSchema.safeParse({ field, file });
+  if (!parsed.success) throw new ProfileApiError(parsed.error.issues[0].message, 400);
+  const body = new FormData();
+  body.append(parsed.data.field, parsed.data.file);
+  return body;
+}
+
 export function profileErrorResponse(error: unknown) {
   const failure = error instanceof ProfileApiError ? error : new ProfileApiError("The profile service is unavailable.", 503);
   return Response.json({ message: failure.message, details: failure.details }, {
@@ -80,7 +94,7 @@ export async function getPublicProfile(id: string) {
   return parseResponse(publicProfileResponseSchema, await backendRequest(`/user/share-profile/${id}`));
 }
 
-export async function updateProfile(token: string, body: UpdateProfileInput) {
+export async function updateProfile(token: string, body: UpdateProfileInput | FormData) {
   return parseResponse(profileMessageSchema, await backendRequest("/user/update-profile", token, body, "PATCH"));
 }
 

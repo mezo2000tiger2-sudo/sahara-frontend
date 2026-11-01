@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+const profileImageSchema = z.union([
+  z.string(),
+  z.array(z.object({ url: z.string() })),
+]).nullish().transform((image) => (
+  typeof image === "string" ? image || null : image?.[0]?.url || null
+));
+
 const profileFields = z.object({
   fName: z.string().optional(),
   lName: z.string().optional(),
@@ -8,7 +15,8 @@ const profileFields = z.object({
   phone: z.string().nullish(),
   age: z.number().min(18).max(70).nullish(),
   gender: z.enum(["male", "female"]).nullish(),
-  avatar: z.string().nullish(),
+  avatar: profileImageSchema,
+  coverImage: profileImageSchema,
 });
 
 export const publicProfileSchema = profileFields.transform(({ fName, lName, fullName, ...profile }) => ({
