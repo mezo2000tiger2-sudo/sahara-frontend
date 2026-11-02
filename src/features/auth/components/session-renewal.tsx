@@ -16,7 +16,7 @@ export function SessionRenewal() {
     };
   }, []);
   if (!renewing) return null;
-  return <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center gap-3 bg-surface">
+  return <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-surface px-4 text-center">
     <LoadingSpinner />Renewing your session…
   </div>;
 }

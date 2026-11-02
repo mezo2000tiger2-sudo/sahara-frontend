@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingState, LoadingSpinner } from "@/components/loading-spinner";
 import { MessageError } from "@/features/messages/components/message-error";
 import { ProfileError } from "@/features/profile/components/profile-error";
 import { ProfileApiError } from "@/features/profile/errors";
@@ -84,7 +84,7 @@ function ConversationThread({ conversationId, userId }: { conversationId: string
     mutation.mutate(parsed.data);
   }
 
-  if (query.isPending) return <p role="status" className="flex items-center gap-2 py-8 text-sm text-ink-muted"><LoadingSpinner />Loading conversation…</p>;
+  if (query.isPending) return <LoadingState>Loading conversation…</LoadingState>;
   if (!conversation) return query.error ? <div className="space-y-4"><MessageError error={query.error} /><Button variant="outline" onClick={() => void query.refetch()}>Try again</Button></div> : null;
   const participant = conversation.participants.find((person) => person._id !== userId);
   const name = [participant?.fName, participant?.lName].filter(Boolean).join(" ") || "Participant";
@@ -129,6 +129,6 @@ export function ConversationChat({ conversationId }: { conversationId: string })
   const profile = useQuery(profileQueryOptions);
   return <div className="flex h-full min-h-0 flex-col">
     <div className="shrink-0 border-b border-outline bg-surface px-4 py-3 sm:px-8"><Link href="/conversation" className="inline-flex items-center gap-2 text-sm font-medium text-main underline-offset-4 hover:underline"><ArrowLeft className="size-4" aria-hidden="true" />All conversations</Link></div>
-    {profile.isPending ? <p role="status" className="flex items-center gap-2 py-8 text-sm text-ink-muted"><LoadingSpinner />Loading your account…</p> : profile.error ? <ProfileError message={profile.error.message} status={profile.error instanceof ProfileApiError ? profile.error.status : undefined} onRetry={() => void profile.refetch()} /> : profile.data ? <ConversationThread key={`${profile.data._id}-${conversationId}`} userId={profile.data._id} conversationId={conversationId} /> : null}
+    {profile.isPending ? <LoadingState>Loading your account…</LoadingState> : profile.error ? <ProfileError message={profile.error.message} status={profile.error instanceof ProfileApiError ? profile.error.status : undefined} onRetry={() => void profile.refetch()} /> : profile.data ? <ConversationThread key={`${profile.data._id}-${conversationId}`} userId={profile.data._id} conversationId={conversationId} /> : null}
   </div>;
 }

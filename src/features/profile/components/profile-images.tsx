@@ -100,7 +100,7 @@ export function ProfileImages({ profile, editable = false }: {
             onChange={(event) => selectImage("avatar", event)} />
           <input ref={coverInput} id={`${inputId}-cover`} aria-label="Choose cover image" type="file" accept="image/png,image/jpeg" hidden disabled={busy}
             onChange={(event) => selectImage("coverImage", event)} />
-          <p role="status" className="text-sm leading-6 text-ink-muted">
+          <p role="status" className={`text-sm leading-6 text-ink-muted ${busy ? "text-center" : ""}`}>
             {refreshing ? "Refreshing profile…" : mutation.isPending ? "Saving image…" : mutation.isSuccess && !refreshError ? "Image saved." : "Choose a PNG or JPEG. Your image saves immediately."}
           </p>
           {selectionError || mutation.error ? <Alert variant="destructive" className="mt-3 wrap-anywhere">{selectionError || mutation.error?.message}</Alert> : null}

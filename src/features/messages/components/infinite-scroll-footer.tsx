@@ -15,7 +15,7 @@ export function InfiniteScrollFooter({ hasNextPage, fetching, failed, onLoadMore
   });
   return <div className="flex flex-col items-center gap-4 py-6">
     <div ref={ref} aria-hidden="true" />
-    <p role="status" className="flex items-center gap-2 text-sm text-ink-muted">
+    <p role="status" className="flex w-full flex-col items-center justify-center gap-2 text-center text-sm text-ink-muted">
       {fetching ? <><LoadingSpinner />Loading…</> : !hasNextPage ? "You’re all caught up." : null}
     </p>
     {hasNextPage ? <Button type="button" variant="outline" disabled={fetching} onClick={onLoadMore}>{failed ? "Retry loading more" : "Load more"}</Button> : null}

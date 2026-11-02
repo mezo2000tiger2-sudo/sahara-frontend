@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingState } from "@/components/loading-spinner";
 import { ProfileError } from "@/features/profile/components/profile-error";
 import { ProfileApiError } from "@/features/profile/errors";
 import { profileQueryOptions } from "@/features/profile/queries";
@@ -24,6 +24,6 @@ export function MessagesPage() {
     <nav aria-label="Message direction" className="mb-8 flex justify-center gap-3">
       {(["received", "sent"] as const).map((item) => <Button asChild key={item} variant={direction === item ? "secondary" : "ghost"}><Link href={`/message?view=${view}&direction=${item}`} aria-current={direction === item ? "page" : undefined}>{item === "received" ? "Received" : "Sent"}</Link></Button>)}
     </nav>
-    {profile.isPending ? <p role="status" className="flex items-center justify-center gap-2 py-8 text-sm text-ink-muted"><LoadingSpinner />Loading your account…</p> : profile.error ? <ProfileError message={profile.error.message} status={profile.error instanceof ProfileApiError ? profile.error.status : undefined} onRetry={() => void profile.refetch()} /> : profile.data ? view === "messages" ? <MessageList key={`${profile.data._id}-${direction}`} userId={profile.data._id} direction={direction} /> : <IdentityRequestList key={`${profile.data._id}-${direction}`} userId={profile.data._id} direction={direction} /> : null}
+    {profile.isPending ? <LoadingState>Loading your account…</LoadingState> : profile.error ? <ProfileError message={profile.error.message} status={profile.error instanceof ProfileApiError ? profile.error.status : undefined} onRetry={() => void profile.refetch()} /> : profile.data ? view === "messages" ? <MessageList key={`${profile.data._id}-${direction}`} userId={profile.data._id} direction={direction} /> : <IdentityRequestList key={`${profile.data._id}-${direction}`} userId={profile.data._id} direction={direction} /> : null}
   </>;
 }

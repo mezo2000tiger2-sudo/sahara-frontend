@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingState } from "@/components/loading-spinner";
 import { profileQueryOptions } from "@/features/profile/queries";
 import { ProfileError } from "@/features/profile/components/profile-error";
 import { ProfileApiError } from "@/features/profile/errors";
@@ -27,7 +27,7 @@ function MessageContent({ messageId, userId }: { messageId: string; userId: stri
       ]);
     },
   });
-  if (query.isPending) return <p role="status" className="flex items-center gap-2 py-8 text-sm text-ink-muted"><LoadingSpinner />Loading message…</p>;
+  if (query.isPending) return <LoadingState>Loading message…</LoadingState>;
   if (query.error && !query.data) return <div className="space-y-4"><MessageError error={query.error} />{![400, 404].includes(query.error instanceof ProfileApiError ? query.error.status : 0) ? <Button variant="outline" onClick={() => void query.refetch()}>Try again</Button> : null}</div>;
   const message = query.data;
   if (!message) return null;
@@ -54,6 +54,6 @@ export function MessageDetail({ messageId }: { messageId: string }) {
   return <>
     <Link href="/message" className="mb-6 inline-flex text-sm font-medium text-main underline-offset-4 hover:underline">← Back to messages</Link>
     <h1 className="mb-8 font-heading text-page-title font-semibold">Your message</h1>
-    {profile.isPending ? <p role="status" className="flex items-center gap-2 py-8 text-sm text-ink-muted"><LoadingSpinner />Loading your account…</p> : profile.error ? <ProfileError message={profile.error.message} status={profile.error instanceof ProfileApiError ? profile.error.status : undefined} onRetry={() => void profile.refetch()} /> : profile.data ? <MessageContent key={`${profile.data._id}-${messageId}`} userId={profile.data._id} messageId={messageId} /> : null}
+    {profile.isPending ? <LoadingState>Loading your account…</LoadingState> : profile.error ? <ProfileError message={profile.error.message} status={profile.error instanceof ProfileApiError ? profile.error.status : undefined} onRetry={() => void profile.refetch()} /> : profile.data ? <MessageContent key={`${profile.data._id}-${messageId}`} userId={profile.data._id} messageId={messageId} /> : null}
   </>;
 }
