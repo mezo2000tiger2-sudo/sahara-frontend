@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingState, LoadingSpinner } from "@/components/loading-spinner";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -26,7 +26,7 @@ export function UpdateProfileForm() {
   if (query.isError && !query.data) return <ProfileError message={query.error.message}
     status={query.error instanceof ProfileApiError ? query.error.status : undefined}
     onRetry={() => { void query.refetch(); }} />;
-  if (!query.data) return <p role="status" className="text-sm text-ink-muted">Loading profile…</p>;
+  if (!query.data) return <LoadingState>Loading profile…</LoadingState>;
   return <>
     {query.isError ? <div className="mb-6"><ProfileError message={query.error.message}
       status={query.error instanceof ProfileApiError ? query.error.status : undefined}

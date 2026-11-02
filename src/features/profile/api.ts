@@ -6,6 +6,7 @@ import { backendProfileError, ProfileApiError } from "@/features/profile/errors"
 import { passwordResultSchema, profileMessageSchema, profileResponseSchema } from "@/schema/profileSchema";
 import type { UpdatePasswordInput } from "@/schema/updatePasswordSchema";
 import type { UpdateProfileInput } from "@/schema/updateProfileSchema";
+import { updateProfileImageSchema, type UpdateProfileImageInput } from "@/schema/updateProfileImageSchema";
 
 async function profileRequest<T extends z.ZodType>(path: string, schema: T, options?: RequestInit): Promise<z.output<T>> {
   let response = await fetch(path, { ...options, cache: "no-store" });
@@ -35,6 +36,13 @@ export function saveProfile(values: UpdateProfileInput) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(values),
   });
+}
+
+export function saveProfileImage(values: UpdateProfileImageInput) {
+  const { field, file } = updateProfileImageSchema.parse(values);
+  const body = new FormData();
+  body.append(field, file);
+  return profileRequest("/api/profile", profileMessageSchema, { method: "PATCH", body });
 }
 
 export function savePassword(values: UpdatePasswordInput) {

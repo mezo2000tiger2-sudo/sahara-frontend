@@ -45,8 +45,8 @@ export async function messageRequest<T extends z.ZodType>(path: string, schema: 
   try {
     response = await fetch(backendUrl(path), {
       method,
-      headers: { Authorization: `Bearer ${token}`, ...(body !== undefined ? { "Content-Type": "application/json" } : {}) },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      headers: { Authorization: `Bearer ${token}`, ...(body !== undefined && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}) },
+      body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
       cache: "no-store",
       redirect: "error",
       signal: AbortSignal.timeout(10_000),

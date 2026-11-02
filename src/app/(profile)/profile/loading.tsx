@@ -1,7 +1,5 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingState } from "@/components/loading-spinner";
 
 export default function ProfileLoading() {
-  return <div role="status" className="flex items-center gap-3 py-8 text-sm text-ink-muted">
-    <LoadingSpinner />Loading profile…
-  </div>;
+  return <LoadingState>Loading profile…</LoadingState>;
 }

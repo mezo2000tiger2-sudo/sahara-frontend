@@ -1,4 +1,4 @@
-import { getProfile, profileErrorResponse, readProfileInput, requireProfileToken, updateProfile } from "@/lib/profile-api.server";
+import { checkProfileOrigin, getProfile, profileErrorResponse, readProfileImageInput, readProfileInput, requireProfileToken, updateProfile } from "@/lib/profile-api.server";
 import { updateProfileSchema } from "@/schema/updateProfileSchema";
 
 export async function GET() {
@@ -13,8 +13,12 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const values = await readProfileInput(request, updateProfileSchema);
-    const result = await updateProfile(await requireProfileToken(), values);
+    checkProfileOrigin(request);
+    const token = await requireProfileToken();
+    const values = /^multipart\/form-data(?:;|$)/i.test(request.headers.get("content-type") ?? "")
+      ? await readProfileImageInput(request)
+      : await readProfileInput(request, updateProfileSchema);
+    const result = await updateProfile(token, values);
     return Response.json(result, { status: 201, headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     return profileErrorResponse(error);

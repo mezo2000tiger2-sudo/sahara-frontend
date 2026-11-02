@@ -68,12 +68,42 @@ password change, pending queries are cancelled, the browser cache is cleared,
 and navigation to sign-in reloads the application. Existing backend failures
 are documented in [backend-issues.md](backend-issues.md).
 
-## Deferred work and verification
+## Avatar and cover images
 
-Avatar circles show the first two uppercase letters of the name at the existing
-dimensions. `AvatarImage` is intentionally commented out. Image loading, uploads,
-covers, refresh tokens, and changes to token expiry are deferred.
+Private `/profile` shows a plus button beside the avatar and an Add/Change cover
+button. Choosing one nonempty PNG/JPEG saves immediately. Cancel does nothing;
+inputs reset so the same file can be selected again. Both controls remain disabled
+until saving and the subsequent profile refresh finish. There is no cropping,
+removal, optimistic preview, new dependency, or additional file-size limit.
 
-No tests were added or run. Browser checks, lint, typecheck, and build were also
-not run, following the user's instruction. No live backend mutations or Postman
-collection runs were performed.
+`saveProfileImage({ field, file })` reuses the existing request/session-renewal
+helper. `PATCH /api/profile` accepts either the existing personal-details JSON or
+multipart FormData with exactly one `avatar` or `coverImage` file. Origin and
+authentication are checked before multipart parsing. The server rejects duplicate,
+unknown, text, empty, unsupported, or combined entries and rebuilds approved
+FormData. Fetch generates the multipart boundary. Success returns only `{ message }`;
+backend error text and status are preserved.
+
+The existing `["profile", "me"]` query is invalidated and awaited after saving.
+A refresh failure retains the cached profile and reports that saving succeeded,
+with a Retry refresh button. A failed refresh never turns a successful upload into
+an upload error. Legacy strings and arrays of `{ url, publicId }` normalize to one
+URL (first array entry); missing/null/empty values become null. Storage identifiers
+are discarded. Both private and shared profiles display images; shared profiles
+hide upload controls even for their owner. Broken avatars use initials; missing or
+broken covers use the themed blue gradient.
+
+The backend must use singular `coverImage` in both update and replacement cleanup.
+This is already present in the sibling backend working tree, which this change
+preserves. Slow/large uploads remain subject to hosting limits and the existing
+10-second backend timeout.
+
+## Verification
+
+Run `node scripts/check-profile-images.mjs` for focused schema, route, forwarding,
+renewal replay, and response-projection checks. For an isolated browser fixture,
+run `npm run styles` then `node scripts/profile-review-server.mjs` and visit
+`http://127.0.0.1:4012/__review/login`. This uses generated local session credentials
+and an in-memory backend; it never uploads to real storage. Stop it with Ctrl+C.
+See [image-upload-verification.md](image-upload-verification.md) for actual results
+and remaining live-verification limits.

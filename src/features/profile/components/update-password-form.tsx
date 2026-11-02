@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "@/components/loading-spinner";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -18,7 +19,7 @@ export function UpdatePasswordForm() {
   if (query.isError && !query.data) return <ProfileError message={query.error.message}
     status={query.error instanceof ProfileApiError ? query.error.status : undefined}
     onRetry={() => { void query.refetch(); }} />;
-  if (!query.data) return <p role="status" className="text-sm text-ink-muted">Loading profile…</p>;
+  if (!query.data) return <LoadingState>Loading profile…</LoadingState>;
   if (query.data.providor !== "system") {
     return <Alert role="status">Manage your password through {query.data.providor === "google" ? "Google" : "GitHub"}.</Alert>;
   }

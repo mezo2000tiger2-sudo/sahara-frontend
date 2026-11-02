@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { attachmentsSchema, backendAttachmentsSchema } from "@/schema/attachmentSchema";
 
 export const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "Invalid message or request ID.");
 export const directionSchema = z.enum(["received", "sent"]);
@@ -22,16 +23,17 @@ export const messageSchema = z.object({
   _id: objectIdSchema,
   recevierId: objectIdSchema,
   content: z.string().optional(),
+  attachments: attachmentsSchema,
   attachmentCount: z.number().int().min(0),
   conversationId: objectIdSchema.nullable().default(null),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
 
-// Only attachment counts leave the server; stored paths are not public URLs.
+// Sanitize attachments before returning them to the browser.
 export const backendMessageSchema = messageSchema.omit({ attachmentCount: true }).extend({
-  attachments: z.array(z.string()).default([]),
-}).transform(({ attachments, ...message }) => ({ ...message, attachmentCount: attachments.length }));
+  attachments: backendAttachmentsSchema,
+}).transform(({ attachments, ...message }) => ({ ...message, attachments, attachmentCount: attachments.length }));
 
 export const messagesResponseSchema = z.object({
   message: z.string(),

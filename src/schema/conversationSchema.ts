@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { imageFileSchema } from "@/schema/createMessageSchema";
+import { attachmentsSchema, backendAttachmentsSchema } from "@/schema/attachmentSchema";
 import { objectIdSchema, paginationFields } from "@/schema/messageSchema";
 
 export const conversationListInputSchema = z.object({
@@ -8,7 +10,12 @@ export const conversationListInputSchema = z.object({
   message: "Pagination exceeds the safe range.",
 });
 
-export const sendConversationMessageSchema = z.object({ content: z.string().trim().min(1).max(5000) }).strict();
+export const sendConversationMessageSchema = z.object({
+  content: z.string().trim().max(5000).default(""),
+  attachments: z.array(imageFileSchema).max(3, "Choose up to 3 images.").default([]),
+}).strict().refine(({ content, attachments }) => content || attachments.length > 0, {
+  message: "Add a message or choose an image.",
+});
 
 export const conversationSchema = z.object({
   _id: objectIdSchema,
@@ -28,14 +35,15 @@ export const conversationMessageSchema = z.object({
   senderId: objectIdSchema,
   recevierId: objectIdSchema,
   content: z.string().nullable(),
+  attachments: attachmentsSchema,
   attachmentCount: z.number().int().min(0),
   createdAt: z.iso.datetime(),
 });
 
-// Stored attachment paths are private; match the existing message API's counts.
+// Sanitize attachments before returning them to the browser.
 export const backendConversationMessageSchema = conversationMessageSchema.omit({ attachmentCount: true }).extend({
-  attachments: z.array(z.string()),
-}).transform(({ attachments, ...message }) => ({ ...message, attachmentCount: attachments.length }));
+  attachments: backendAttachmentsSchema,
+}).transform(({ attachments, ...message }) => ({ ...message, attachments, attachmentCount: attachments.length }));
 
 export const conversationsResponseSchema = z.object({
   message: z.string(),

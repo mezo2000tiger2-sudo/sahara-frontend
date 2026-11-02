@@ -51,9 +51,10 @@ The model stores local paths such as `uploads\\users\\...`, while
 `src/app.bootstrap.js` has no static middleware exposing that upload directory.
 These paths cannot currently be used directly as browser image URLs.
 
-Avatar images are deferred. The frontend reserves their dimensions, comments out
-the image element, and renders a letter circle. Define public image URLs and
-upload/update endpoints when image integration is requested.
+The frontend now renders saved URLs and provides an initials fallback for broken
+avatars. Legacy local paths still need a public serving route; new Cloudinary
+uploads return public URLs. This historical issue does not establish that legacy
+files are publicly reachable.
 
 ## Update responses contain an encrypted phone
 
@@ -61,5 +62,12 @@ upload/update endpoints when image integration is requested.
 saved document without decrypting it. `getProfile()` decrypts the phone correctly.
 The frontend therefore ignores `updatedUser` and refetches the profile after saving.
 
-No backend fixes, migrations, or live verification were performed. Refresh-token
-storage, renewal, and expiry handling remain outside this change.
+## Cover-image prerequisite (verified in source 2026-11-01)
+
+The model and multipart field use singular `coverImage`. The update service must
+also use `updateQuery.coverImage`, `files.coverImage`, and `req.user.coverImage`
+when saving and deleting replaced images. These corrections are already present
+in the sibling backend working tree, together with single-file limits and upload
+cleanup on validation/database failure. They were preserved without further edits.
+Deploy those backend changes with this frontend. No live Cloudinary replacement,
+database persistence, or deletion verification was performed.

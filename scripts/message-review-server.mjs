@@ -17,6 +17,9 @@ const conversationId = "cccccccccccccccccccccccc";
 const id = (number) => number.toString(16).padStart(24, "0");
 const timestamp = "2026-10-29T10:00:00.000Z";
 const token = () => `review.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.fixture`;
+// Public sample delivery only; these fixtures never upload assets.
+const reviewImage = { url: "https://res.cloudinary.com/demo/image/upload/sample.jpg", publicId: "fixture-private-id" };
+const reviewAttachments = (index) => index % 5 === 1 ? [reviewImage] : index % 5 === 3 ? [reviewImage, { url: "https://res.cloudinary.com/demo/image/upload/does-not-exist-saharah.jpg", publicId: "fixture-broken-id" }, "uploads/private-image.png"] : [];
 let scenario = "normal";
 let messages;
 let requests;
@@ -31,7 +34,7 @@ function reset(name = "normal") {
     _id: id(index + 1), recevierId: index < 12 ? userId : otherId,
     _senderId: index === 0 ? null : index < 12 ? otherId : userId,
     content: index === 1 ? undefined : `Fixture message ${index + 1}\n${"A thoughtful message for browser review. ".repeat(index === 2 ? 40 : 3)}`,
-    attachments: index === 1 || index === 3 ? ["uploads/messageAttachments/private-image.png"] : [],
+    attachments: reviewAttachments(index),
     conversationId: null, createdAt: timestamp, updatedAt: timestamp,
   }));
   requests = [

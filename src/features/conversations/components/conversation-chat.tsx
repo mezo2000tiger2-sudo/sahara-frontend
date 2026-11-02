@@ -1,20 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, Send } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { ArrowLeft, ImagePlus, Send, X } from "lucide-react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingState, LoadingSpinner } from "@/components/loading-spinner";
 import { MessageError } from "@/features/messages/components/message-error";
 import { ProfileError } from "@/features/profile/components/profile-error";
 import { ProfileApiError } from "@/features/profile/errors";
 import { profileQueryOptions } from "@/features/profile/queries";
 import { sendConversationMessage } from "@/features/conversations/api";
 import { conversationMessagesQueryOptions } from "@/features/conversations/queries";
-import { sendConversationMessageSchema } from "@/schema/conversationSchema";
+import { sendConversationMessageSchema, type SendConversationMessageInput } from "@/schema/conversationSchema";
 import { MessageBubble } from "./message-bubble";
 
 function ConversationThread({ conversationId, userId }: { conversationId: string; userId: string }) {
@@ -28,16 +29,29 @@ function ConversationThread({ conversationId, userId }: { conversationId: string
     refetchOnReconnect: followingLatest,
   });
   const [content, setContent] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<(string | undefined)[]>([]);
+  useEffect(() => () => { previews.forEach((url) => { if (url) URL.revokeObjectURL(url); }); }, [previews]);
+
+  function selectImages(files: File[]) {
+    setAttachments(files);
+    setPreviews(files.map((file) => file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined));
+  }
+  const fileInput = useRef<HTMLInputElement>(null);
+  const validation = sendConversationMessageSchema.safeParse({ content, attachments });
   const historyRef = useRef<HTMLDivElement>(null);
   const nearBottom = useRef(true);
   const olderPosition = useRef<{ height: number; top: number } | null>(null);
   const messages = [...new Map(query.data?.pages.flatMap((page) => page.messages).map((message) => [message._id, message])).values()].reverse();
   const conversation = query.data?.pages[0]?.conversation;
   const mutation = useMutation({
-    mutationFn: (text: string) => sendConversationMessage(conversationId, { content: text }, queryClient),
+    mutationFn: (input: SendConversationMessageInput) => sendConversationMessage(conversationId, input, queryClient),
     retry: false,
     onSuccess: async () => {
       setContent("");
+      setAttachments([]);
+      setPreviews([]);
+      if (fileInput.current) fileInput.current.value = "";
       nearBottom.current = true;
       setFollowingLatest(true);
       await queryClient.invalidateQueries({ queryKey: ["conversations", userId, "messages", conversationId] });
@@ -65,12 +79,12 @@ function ConversationThread({ conversationId, userId }: { conversationId: string
 
   function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const parsed = sendConversationMessageSchema.safeParse({ content });
+    const parsed = sendConversationMessageSchema.safeParse({ content, attachments });
     if (!parsed.success || mutation.isPending) return;
-    mutation.mutate(parsed.data.content);
+    mutation.mutate(parsed.data);
   }
 
-  if (query.isPending) return <p role="status" className="flex items-center gap-2 py-8 text-sm text-ink-muted"><LoadingSpinner />Loading conversation…</p>;
+  if (query.isPending) return <LoadingState>Loading conversation…</LoadingState>;
   if (!conversation) return query.error ? <div className="space-y-4"><MessageError error={query.error} /><Button variant="outline" onClick={() => void query.refetch()}>Try again</Button></div> : null;
   const participant = conversation.participants.find((person) => person._id !== userId);
   const name = [participant?.fName, participant?.lName].filter(Boolean).join(" ") || "Participant";
@@ -83,9 +97,29 @@ function ConversationThread({ conversationId, userId }: { conversationId: string
     </div>
     <form onSubmit={send} className="shrink-0 space-y-2 border-t border-outline p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-8" aria-busy={mutation.isPending}>
       {mutation.error ? <MessageError error={mutation.error} /> : null}
-      <Label htmlFor="conversation-message">Your message</Label>
-      <textarea id="conversation-message" name="content" required maxLength={5000} rows={2} value={content} disabled={mutation.isPending} onChange={(event) => { setContent(event.target.value); if (mutation.isError) mutation.reset(); }} placeholder="Write a message…" className="block max-h-32 w-full resize-none rounded-xl border border-outline-strong bg-page px-3 py-2 text-sm leading-6 outline-none placeholder:text-ink-subtle focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-60" aria-describedby="conversation-message-limit" />
-      <div className="flex items-center justify-between gap-3"><p id="conversation-message-limit" className="text-xs text-ink-muted">{content.length.toLocaleString()} / 5,000</p><Button type="submit" disabled={!content.trim() || mutation.isPending}><Send className="size-4" aria-hidden="true" />{mutation.isPending ? "Sending…" : "Send message"}</Button></div>
+      {attachments.length ? <ul aria-label="Selected images" className="flex gap-3 overflow-x-auto py-1">
+        {attachments.map((file, index) => <li key={`${file.name}-${index}`} className="relative size-20 shrink-0 rounded-xl border border-outline bg-page">
+          {/* Object URLs preview local files without uploading them. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {previews[index] ? <img src={previews[index]} alt={`Selected image: ${file.name}`} className="size-full rounded-xl object-cover" /> : <span className="block truncate p-2 text-xs text-ink-muted">{file.name}</span>}
+          <Button type="button" variant="secondary" size="icon-xs" className="absolute right-1 top-1 rounded-full shadow-sm" aria-label={`Remove ${file.name}`} disabled={mutation.isPending} onClick={() => {
+            selectImages(attachments.filter((_, imageIndex) => imageIndex !== index));
+            if (fileInput.current) fileInput.current.value = "";
+          }}><X aria-hidden="true" /></Button>
+        </li>)}
+      </ul> : null}
+      {attachments.length && !validation.success ? <p id="conversation-images-error" role="alert" className="text-sm text-ink-muted">{validation.error.issues[0].message}</p> : null}
+      <Label htmlFor="conversation-message" className="sr-only">Your message</Label>
+      <div className="flex min-w-0 items-center gap-2">
+        <Input id="conversation-message" name="content" maxLength={5000} value={content} disabled={mutation.isPending} onChange={(event) => { setContent(event.target.value); if (mutation.isError) mutation.reset(); }} placeholder="Write a message..." className="h-12 flex-1 rounded-xl bg-page px-4" aria-describedby="conversation-message-limit" />
+        <input ref={fileInput} id="conversation-images" type="file" accept="image/png,image/jpeg,image/jpg" multiple hidden disabled={mutation.isPending} onChange={(event) => { selectImages(Array.from(event.target.files ?? [])); if (mutation.isError) mutation.reset(); }} />
+        <Button type="button" variant="outline" size="icon-lg" className="rounded-xl bg-page" aria-label="Select images" title="Select up to 3 PNG or JPEG images" aria-describedby="conversation-images-help" disabled={mutation.isPending} onClick={() => fileInput.current?.click()}><ImagePlus className="size-5" aria-hidden="true" /></Button>
+        <Button type="submit" size="icon-lg" className="rounded-xl" aria-label={mutation.isPending ? "Sending message" : "Send message"} disabled={!validation.success || mutation.isPending}>{mutation.isPending ? <LoadingSpinner /> : <Send className="size-5" aria-hidden="true" />}</Button>
+      </div>
+      <div className="flex items-center justify-between gap-2 text-[0.6875rem] text-ink-muted">
+        <p id="conversation-images-help">Up to 3 images</p>
+        <p id="conversation-message-limit">{content.length.toLocaleString()} / 5,000</p>
+      </div>
       <p role="status" className="sr-only">{mutation.isSuccess ? "Message sent." : ""}</p>
     </form>
   </section>;
@@ -95,6 +129,6 @@ export function ConversationChat({ conversationId }: { conversationId: string })
   const profile = useQuery(profileQueryOptions);
   return <div className="flex h-full min-h-0 flex-col">
     <div className="shrink-0 border-b border-outline bg-surface px-4 py-3 sm:px-8"><Link href="/conversation" className="inline-flex items-center gap-2 text-sm font-medium text-main underline-offset-4 hover:underline"><ArrowLeft className="size-4" aria-hidden="true" />All conversations</Link></div>
-    {profile.isPending ? <p role="status" className="flex items-center gap-2 py-8 text-sm text-ink-muted"><LoadingSpinner />Loading your account…</p> : profile.error ? <ProfileError message={profile.error.message} status={profile.error instanceof ProfileApiError ? profile.error.status : undefined} onRetry={() => void profile.refetch()} /> : profile.data ? <ConversationThread key={`${profile.data._id}-${conversationId}`} userId={profile.data._id} conversationId={conversationId} /> : null}
+    {profile.isPending ? <LoadingState>Loading your account…</LoadingState> : profile.error ? <ProfileError message={profile.error.message} status={profile.error instanceof ProfileApiError ? profile.error.status : undefined} onRetry={() => void profile.refetch()} /> : profile.data ? <ConversationThread key={`${profile.data._id}-${conversationId}`} userId={profile.data._id} conversationId={conversationId} /> : null}
   </div>;
 }

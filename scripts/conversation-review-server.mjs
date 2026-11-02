@@ -18,6 +18,9 @@ const id = (value) => value.toString(16).padStart(24, "0");
 const token = () => `review.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.fixture`;
 const participants = [{ _id: userId, fName: "Review", lName: "User", avatar: null }, { _id: otherId, fName: "Sara", lName: "Ahmed", avatar: null }];
 const conversation = { _id: conversationId, participants, createdAt: timestamp, updatedAt: timestamp };
+// Public sample delivery only; these fixtures never upload assets.
+const reviewImage = { url: "https://res.cloudinary.com/demo/image/upload/sample.jpg", publicId: "fixture-private-id" };
+const reviewAttachments = (index) => index % 5 === 1 ? [reviewImage] : index % 5 === 3 ? [reviewImage, { url: "https://res.cloudinary.com/demo/image/upload/does-not-exist-saharah.jpg", publicId: "fixture-broken-id" }, "uploads/private-image.png"] : [];
 let scenario;
 let calls;
 let messages;
@@ -28,8 +31,8 @@ function reset(name = "normal") {
   renewed = false;
   messages = Array.from({ length: 12 }, (_, index) => ({
     _id: id(index + 1), conversationId, senderId: index % 2 ? userId : otherId,
-    recevierId: index % 2 ? otherId : userId, content: `Conversation message ${index + 1}`,
-    attachments: index === 0 ? ["uploads/private-image.png"] : [],
+    recevierId: index % 2 ? otherId : userId, content: index === 1 ? null : `Conversation message ${index + 1}`,
+    attachments: reviewAttachments(index),
     createdAt: new Date(Date.parse(timestamp) + index * 60_000).toISOString(),
   })).reverse();
 }
@@ -41,7 +44,16 @@ const paginate = (items, url) => {
   const size = Number(url.searchParams.get("size") ?? 5);
   return { batch: items.slice((page - 1) * size, page * size), page, pages: Math.ceil(items.length / size), size };
 };
-async function body(req) { let value = ""; for await (const chunk of req) value += chunk; return JSON.parse(value || "{}"); }
+async function body(req) {
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const value = Buffer.concat(chunks);
+  if (req.headers["content-type"]?.startsWith("multipart/form-data")) {
+    const form = await new Response(value, { headers: { "Content-Type": req.headers["content-type"] } }).formData();
+    return { content: form.get("content") ?? "", attachments: form.getAll("attachments") };
+  }
+  return JSON.parse(value.toString() || "{}");
+}
 const fixture = http.createServer(async (req, res) => {
   const url = new URL(req.url, process.env.BACKEND_API_URL);
   try {
@@ -88,9 +100,9 @@ const fixture = http.createServer(async (req, res) => {
       }
       if (req.method === "POST") {
         if (scenario === "send-error") return fail(res, "Fixture sending unavailable", 503);
-        const { content, ...extra } = await body(req);
-        if (typeof content !== "string" || !content.trim() || content.trim().length > 5000 || Object.keys(extra).length) return fail(res, "invalid content");
-        const message = { _id: id(100 + messages.length), conversationId, senderId: userId, recevierId: otherId, content: content.trim(), attachments: [], createdAt: new Date().toISOString() };
+        const { content = "", attachments = [], ...extra } = await body(req);
+        if (typeof content !== "string" || (!content.trim() && !attachments.length) || attachments.length > 3 || attachments.some(file => !["image/png", "image/jpeg", "image/jpg"].includes(file.type)) || content.trim().length > 5000 || Object.keys(extra).length) return fail(res, "invalid content");
+        const message = { _id: id(100 + messages.length), conversationId, senderId: userId, recevierId: otherId, content: content.trim() || null, attachments: attachments.map(() => ({ ...reviewImage })), createdAt: new Date().toISOString() };
         messages.unshift(message);
         return json(res, { message: "done", chatMessage: message }, 201);
       }

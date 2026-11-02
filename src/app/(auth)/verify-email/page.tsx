@@ -7,7 +7,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingState } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { useAuthMessage } from "@/context/auth-message-context";
 import { FormInput, FormMessage, SubmitButton } from "@/features/auth/components/form-controls";
@@ -168,7 +168,7 @@ export default function VerifyEmailPage() {
   return <>
     <h1 className="mb-4 text-center font-heading text-3xl font-semibold">Verify your email</h1>
     <p className="mb-8 text-center text-ink-muted">Enter the 6-digit code sent to your email to confirm your account.</p>
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<LoadingState>Loading verification...</LoadingState>}>
       <VerifyEmailForm />
     </Suspense>
   </>;

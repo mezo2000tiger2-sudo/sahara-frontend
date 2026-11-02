@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, KeyRound, LogOut, Monitor, Share2, ShieldCheck } from "lucide-react";
 
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingState, LoadingSpinner } from "@/components/loading-spinner";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/features/profile/api";
@@ -31,10 +31,10 @@ export function ProfileActions({ shareOrigin }: { shareOrigin?: string }) {
     },
   });
 
-  if (profileQuery.isError) return <ProfileError message={profileQuery.error.message}
+  if (profileQuery.isError && !profileQuery.data) return <ProfileError message={profileQuery.error.message}
     status={profileQuery.error instanceof ProfileApiError ? profileQuery.error.status : undefined}
     onRetry={() => { void profileQuery.refetch(); }} />;
-  if (!profileQuery.data) return <p role="status" className="text-sm text-ink-muted">Loading profile…</p>;
+  if (!profileQuery.data) return <LoadingState>Loading profile…</LoadingState>;
 
   const profile = profileQuery.data;
   const sharePath = `/profile/${profile._id}`;
