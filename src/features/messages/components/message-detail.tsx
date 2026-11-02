@@ -1,5 +1,6 @@
 "use client";
 
+import { MessageImages } from "@/components/message-images";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "@/components/ui/alert";
@@ -36,7 +37,7 @@ function MessageContent({ messageId, userId }: { messageId: string; userId: stri
     <div className="flex flex-wrap items-center justify-between gap-3"><time dateTime={message.createdAt} className="text-sm text-ink-muted">{new Date(message.createdAt).toLocaleString()}</time><Button variant="outline" disabled={query.isFetching || mutation.isPending} onClick={() => void query.refetch()}>Refresh</Button></div>
     {query.error ? <MessageError error={query.error} /> : null}
     <p className="whitespace-pre-wrap text-base leading-8 wrap-anywhere">{message.content || "This message contains attachments."}</p>
-    {message.attachmentCount ? <div className="rounded-lg border border-outline bg-surface-muted p-4 text-sm leading-6 text-ink-muted"><p>{message.attachmentCount} {message.attachmentCount === 1 ? "attachment" : "attachments"}</p><p>Attachment preview is currently unavailable.</p></div> : null}
+    <MessageImages attachments={message.attachments} />
     {message.recevierId === userId ? <section aria-labelledby="identity-title" className="space-y-4 border-t border-outline pt-6">
       <h2 id="identity-title" className="font-heading text-lg font-semibold">Sender identity</h2>
       <p className="text-sm leading-6 text-ink-muted">Ask the sender to share their identity. They can choose to accept or reject your request.</p>

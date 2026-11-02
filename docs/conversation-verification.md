@@ -33,3 +33,15 @@ The detail route now uses its own `(conversation)` layout, keeping the same URL.
 Browser layout assertions passed at 1440 x 900 and 390 x 844: the main area matches the viewport, the document has no outer vertical scrollbar, and the composer stays visible. The conversation list keeps its normal layout and footer. These checks used the isolated fixture backend.
 
 Updated screenshots: [full-screen desktop](conversation-fullscreen-desktop.png), [full-screen mobile](conversation-fullscreen-mobile.png).
+
+## Inline attachment images (2026-11-02)
+
+Conversation responses accept sanitized attachments. After backend multipart support was added, image display and uploads were enabled in conversation bubbles and the composer. See [current image verification](message-images-verification.md) and [backend findings](message-images-backend-findings.md).
+
+## Conversation uploads (2026-11-02)
+
+Backend source now supports authenticated multipart `POST /conversation/:conversationId/messages`: optional `content` (max 5000 characters), up to three repeated `attachments` PNG/JPEG files, and image-only messages. The frontend composer selects and clears files, retains drafts/files on failure, clears after success, and displays returned images inline. Next routes rebuild approved FormData; tokens and Cloudinary metadata remain server-only. JSON text requests remain compatible.
+
+Validation passed: lint, typecheck, production build, conversation-check, check-messages, check-session-refresh and sign-in tests. Browser fixtures passed image-only sending, failure retaining selected files, successful retry clearing selection, and 320px composer/overflow checks. Synthetic file uploads map to public demo URLs in the fixture; they do not prove Cloudinary upload or database persistence.
+
+Local backend root returned 200 and unauthenticated conversation list returned 401. Frontend started on http://localhost:3001 using a process-only BACKEND_API_URL=http://localhost:3000 override; saved .env still targets Render. No real account upload was attempted.

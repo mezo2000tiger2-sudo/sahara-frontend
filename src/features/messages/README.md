@@ -23,11 +23,13 @@ The [Saharah Postman collection](https://go.postman.co/collection/51167906-96fc6
 
 The browser calls same-origin Next routes. `messages-api.server.ts` reads backend tokens through `decryptToken(true)`, uses a ten-second timeout, validates inputs and successful responses, and returns private non-cached JSON. POST/PATCH check the application origin. Backend failures retain their status, message and readable validation details.
 
-Message schemas strip unlisted fields, including sender IDs, and replace attachment paths with `attachmentCount`. Requester profiles allow only ID and names. Tokens and local filesystem paths are not returned to the browser. Attachments display an unavailable notice until the backend supplies a protected serving route.
+Message schemas strip unlisted fields, including anonymous sender IDs and Cloudinary `publicId`. Backend `attachments: [{ url, publicId }]` and legacy strings become `attachments: (string | null)[]` plus `attachmentCount`. Only valid HTTPS URLs without credentials are retained; local paths and unusable URLs become `null`, preserving their position and count. Requester profiles allow only ID and names. Tokens and local filesystem paths are not returned to the browser.
+
+Cards show compact thumbnails; details show all images uncropped at responsive widths. Conversation bubbles also display images; the chat composer now sends up to three PNG/JPEG files with optional text using the backend multipart endpoint. The shared `MessageImages` component uses native lazy-loaded images with `referrerPolicy="no-referrer"` and one fallback per unavailable or failed image. Cloudinary delivery remains public: anyone with a URL can view it. No image dialog, proxy endpoint, or upload behavior was added. See [backend findings](../../../docs/message-images-backend-findings.md).
 
 The browser reuses session renewal, retrying the original request once for `jwt expired`. Terminal 401 clears private query data and signs out. Identity mutations do not retry transport failures automatically.
 
-The recipient can explicitly request sender identity from details. The backend returns an existing request if one already exists, including a rejected one. Details do not scan every request page to reconstruct status after reload; request management lives in the list view. Accepting creates a conversation and removes the original message from the received/sent message lists, while its detail remains accessible. This feature confirms acceptance but does not implement chat pages or replies.
+The recipient can explicitly request sender identity from details. The backend returns an existing request if one already exists, including a rejected one. Details do not scan every request page to reconstruct status after reload; request management lives in the list view. Accepting creates a conversation and removes the original message from the received/sent message lists, while its detail remains accessible. Accepted requests link to the existing conversation pages and text replies.
 
 ## Verification
 
@@ -38,3 +40,5 @@ For an isolated browser review, run `node scripts/message-review-server.mjs` aft
 Open `http://127.0.0.1:4011/__review/login` to set the synthetic session and enter the app. Set fixture scenarios with `/__review/scenario?name=normal|empty|list-error|next-error|malformed|expired-once|unauthorized|transport|decision-error` on port 4011, then refresh the app. `/__review/state` reports calls and synthetic request state without tokens. Resetting a scenario resets all fixture data. Stop with Ctrl+C. No real messages or identity decisions are sent.
 
 Fixture behavior is derived from checked-out backend handlers, not from a published mock. It does not reproduce MongoDB transactions, Redis revocation, deployment proxies, or actual user sessions. Lint, typecheck, build and independent browser-review outcomes are recorded in `docs/message-implementation-report.md`.
+
+Image fixtures include zero, one and three attachments, a broken HTTPS image, a historical local path, and attachment-only messages. Both review servers use public Cloudinary demo images; this tests delivery rendering, not real uploads. See [image verification](../../../docs/message-images-verification.md).

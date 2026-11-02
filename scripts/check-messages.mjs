@@ -12,7 +12,7 @@ const messageId = "111111111111111111111111";
 const requestId = "222222222222222222222222";
 const userId = "aaaaaaaaaaaaaaaaaaaaaaaa";
 const timestamp = "2026-10-29T10:00:00.000Z";
-const message = { _id: messageId, recevierId: userId, content: "Hello", attachments: ["private/image.png"], senderId: userId, secret: "hidden", conversationId: null, createdAt: timestamp, updatedAt: timestamp };
+const message = { _id: messageId, recevierId: userId, content: "Hello", attachments: [{ url: "https://res.cloudinary.com/demo/image/upload/sample.jpg", publicId: "private-cloud-id" }], senderId: userId, secret: "hidden", conversationId: null, createdAt: timestamp, updatedAt: timestamp };
 const identity = { _id: requestId, messageId, status: "pending", requester: { _id: userId, fName: "Test", lName: "User", avatar: "private/avatar.png", email: "hidden@example.test" }, createdAt: timestamp, updatedAt: timestamp };
 const json = (value, status = 200) => Response.json(value, { status });
 
@@ -62,10 +62,25 @@ async function checkResponse(response, status) {
 }
 
 async function main() {
+  const schemas = harness().load("src/schema/messageSchema.ts");
+  const image = "https://res.cloudinary.com/demo/image/upload/sample.jpg";
+  for (const attachments of [[], [{ url: image, publicId: "private-cloud-id" }], [image, { url: image, publicId: "private-cloud-id" }, "uploads/private.png"], ["C:\\uploads\\private.png", "file:///private.png", "http://example.test/image.png", "javascript:alert(1)", "not a URL", "https://", "https://user:password@example.test/a.png", "//example.test/a.png"]]) {
+    const parsed = schemas.backendMessageSchema.parse({ ...message, content: undefined, attachments, secret: "private-metadata" });
+    assert.equal(parsed.attachmentCount, attachments.length);
+    assert.equal(parsed.attachments.length, attachments.length);
+    assert.deepEqual(Array.from(parsed.attachments), attachments.map((item) => (typeof item === "object" ? item.url : item) === image ? image : null));
+    assert.equal(JSON.stringify(parsed).includes("private"), false);
+    assert.equal("secret" in parsed, false);
+    assert.equal("senderId" in parsed, false);
+  }
+  console.log("PASS: zero/one/three images, Cloudinary objects, legacy HTTPS strings, local/unusable URL fallbacks, attachment-only messages, private metadata stripped");
+
   let h = harness([json({ message: "done", data: { messages: [message], page: 1, pages: 1, size: 5 } })]);
   let route = h.load("src/app/api/messages/route.ts");
   let data = await checkResponse(await route.GET(request("/api/messages")), 200);
   assert.equal(data.data.messages[0].attachmentCount, 1);
+  assert.equal(data.data.messages[0].attachments[0], "https://res.cloudinary.com/demo/image/upload/sample.jpg");
+  assert.equal(JSON.stringify(data).includes("publicId"), false);
   assert.equal(JSON.stringify(data).includes("private/"), false);
   assert.equal("senderId" in data.data.messages[0], false);
   assert.equal("secret" in data.data.messages[0], false);

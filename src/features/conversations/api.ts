@@ -11,7 +11,10 @@ export function fetchConversationMessages(conversationId: string, page: number, 
 }
 
 export function sendConversationMessage(conversationId: string, input: SendConversationMessageInput, queryClient: QueryClient) {
+  const body = new FormData();
+  if (input.content) body.append("content", input.content);
+  for (const file of input.attachments) body.append("attachments", file);
   return messageRequest(`/api/conversations/${encodeURIComponent(conversationId)}/messages`, sendConversationMessageResponseSchema, queryClient, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
+    method: "POST", body,
   });
 }
