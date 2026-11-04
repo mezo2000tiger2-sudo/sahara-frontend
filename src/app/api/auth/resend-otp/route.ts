@@ -13,12 +13,12 @@ export async function PATCH(request: Request) {
   const origin = request.headers.get("origin");
   const applicationOrigin = new URL(process.env.AUTH_URL ?? request.url).origin;
   if (origin && origin !== applicationOrigin) {
-    return Response.json({ message: "Unable to submit this request." }, { status: 403 });
+    return Response.json({}, { status: 403 });
   }
 
   const parsed = resendOtpSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return Response.json({ message: "Check your details.", fieldErrors: z.flattenError(parsed.error).fieldErrors }, { status: 400 });
+    return Response.json({ fieldErrors: z.flattenError(parsed.error).fieldErrors }, { status: 400 });
   }
 
   try {
@@ -36,7 +36,7 @@ export async function PATCH(request: Request) {
     }
     // Retry metadata must never hide an otherwise valid backend error message.
     const error = backendErrorSchema.omit({ details: true }).safeParse(payload);
-    if (!response.ok && error.success && error.data.error) {
+    if (!response.ok && error.success && error.data.error?.trim()) {
       const details = resendErrorSchema.safeParse(payload);
       const duration = details.success ? details.data.details : undefined;
       const seconds = typeof duration === "string" && /^[0-9]+$/.test(duration) ? Number(duration) : 0;
@@ -44,8 +44,8 @@ export async function PATCH(request: Request) {
         ? seconds : undefined;
       return Response.json({ message: error.data.error, retryAfterSeconds }, { status: response.status });
     }
-    return Response.json({ message: "We could not confirm that a new code was sent. Please try again." }, { status: 502 });
+    return Response.json({}, { status: 502 });
   } catch {
-    return Response.json({ message: "Resending your code is unavailable right now. Please try again." }, { status: 503 });
+    return Response.json({}, { status: 503 });
   }
 }

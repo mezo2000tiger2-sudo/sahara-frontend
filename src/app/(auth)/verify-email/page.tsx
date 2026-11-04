@@ -19,6 +19,7 @@ const verificationResponseSchema = z.object({
 });
 
 const resendResponseSchema = verificationResponseSchema.extend({
+  message: z.string().optional(),
   retryAfterSeconds: z.number().int().positive().max(Math.floor(Number.MAX_SAFE_INTEGER / 1000)).optional(),
 });
 
@@ -99,12 +100,10 @@ function VerifyEmailForm() {
         const error = result.data.fieldErrors?.email?.[0];
         if (error) setError("email", { type: "server", message: error }, { shouldFocus: true });
         if (result.data.retryAfterSeconds) startCountdown(address, result.data.retryAfterSeconds);
-        setMessage({ text: result.data.message, type: "error" });
-      } else {
-        setMessage({ text: "We could not confirm that a new code was sent. Please try again.", type: "error" });
+        if (result.data.message?.trim()) setMessage({ text: result.data.message, type: "error" });
       }
     } catch {
-      setMessage({ text: "Resending your code is unavailable right now. Please try again.", type: "error" });
+      // No backend response means there is no backend error to display.
     } finally {
       requestPending.current = false;
       setResending(false);
