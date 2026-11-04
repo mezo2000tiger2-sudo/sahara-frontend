@@ -66,6 +66,10 @@ backend cooldown or maximum-attempt errors without numeric details therefore
 display without an exact countdown. The backend must set `error.details`
 explicitly before throwing a block error.
 
+Resend error banners show only backend error text. Connection failures, timeouts,
+and unusable responses show no banner; the button becomes available again.
+Local email validation remains inline, and success still starts the countdown.
+
 Verification remains available during a countdown. In-flight verification and
 resend requests share a lock, preventing double-clicks and overlapping requests.
 No resend request runs automatically on mount, refresh, or countdown expiry.
