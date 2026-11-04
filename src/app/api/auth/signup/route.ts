@@ -77,6 +77,9 @@ export async function POST(request: Request) {
       if (message === "Unexpected field") {
         return Response.json({ message: "Unable to upload the avatar. Choose one image and try again.", fieldErrors: { avatar: ["Choose one avatar image."] } }, { status: 400 });
       }
+      if (message) {
+        return Response.json({ message }, { status: response.status });
+      }
     }
     return Response.json({ message: "Unable to create your account. Please try again." }, { status: 502 });
   } catch {

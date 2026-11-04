@@ -115,8 +115,12 @@ Live Google OAuth requires configured credentials and a real account.
 Set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` for the built-in Google provider.
 
 Backend sign-in exchanges have a 10-second timeout and reject redirects.
-Transport failures, invalid responses, and malformed or expired tokens show a
-readable service-unavailable message. Backend error messages remain unchanged.
+Backend failures display the first nonblank string in `error`, then `message`,
+without changing its wording or whitespace. An invalid `error` field does not
+hide a valid `message`. Rejections without either include the HTTP status.
+Timeouts, connection failures, invalid responses, and malformed or expired
+tokens each show a specific explanation. Raw HTML, parser errors, and token
+contents are never forwarded to the user.
 Run `node --test scripts/signin.test.mjs` for the focused regression checks.
 
 GitHub uses `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` with the built-in

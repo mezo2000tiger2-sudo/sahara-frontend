@@ -22,6 +22,7 @@ export function SigninForm({ initialError }: { initialError?: string }) {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [githubBusy, setGithubBusy] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState<string>();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema), defaultValues: { email: "", password: "" },
   });
@@ -29,10 +30,14 @@ export function SigninForm({ initialError }: { initialError?: string }) {
 
   async function submit(values: z.infer<typeof signInSchema>) {
     clearMessage();
+    setVerificationEmail(undefined);
     try {
       const result = await signIn("credentials", { ...values, redirect: false, redirectTo: "/" });
       if (!result || result.error || !result.ok || !result.url) {
         setMessage({ text: authenticationErrorMessage(result?.error ?? "Unknown", result?.code)!, type: "error" });
+        if (result?.error === "CredentialsSignin" && result.code === "account not confirmed") {
+          setVerificationEmail(values.email);
+        }
         return;
       }
       setRedirecting(true);
@@ -45,8 +50,10 @@ export function SigninForm({ initialError }: { initialError?: string }) {
 
   return <form noValidate onSubmit={handleSubmit(submit)} className="space-y-6" aria-busy={busy}>
     <FormMessage />
-    <GoogleButton disabled={busy} busy={googleBusy} onBusy={setGoogleBusy} onError={(text) => setMessage({ text, type: "error" })} />
-    <GitHubButton disabled={busy} busy={githubBusy} onBusy={setGithubBusy} onError={(text) => setMessage({ text, type: "error" })} />
+    {verificationEmail && !busy ? <Link href={`/verify-email?email=${encodeURIComponent(verificationEmail)}`} onClick={clearMessage}
+      className="block text-center font-medium text-main underline underline-offset-4">Verify your email</Link> : null}
+    <GoogleButton disabled={busy} busy={googleBusy} onBusy={(pending) => { setGoogleBusy(pending); if (pending) setVerificationEmail(undefined); }} onError={(text) => setMessage({ text, type: "error" })} />
+    <GitHubButton disabled={busy} busy={githubBusy} onBusy={(pending) => { setGithubBusy(pending); if (pending) setVerificationEmail(undefined); }} onError={(text) => setMessage({ text, type: "error" })} />
     <AuthDivider />
     <fieldset disabled={busy} className="space-y-6">
       <legend className="sr-only">Sign in with email</legend>
